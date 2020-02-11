@@ -5,22 +5,24 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Size
 import android.view.Surface
-import androidx.renderscript.Allocation
-import androidx.renderscript.Element
-import androidx.renderscript.RenderScript
-import androidx.renderscript.Type
+import android.renderscript.Allocation
+import android.renderscript.Element
+import android.renderscript.RenderScript
+import android.renderscript.Type
 
 
-class SobelProcessor {
-    private lateinit var mInputAllocation: Allocation
-    private lateinit var mPrevAllocation: Allocation
-    private lateinit var mOutputAllocation: Allocation
+class SobelProcessor(rs: RenderScript, dimensions: Size) {
+    private var mInputAllocation: Allocation
+    private var mPrevAllocation: Allocation
+    private var mOutputAllocation: Allocation
 
-    private lateinit var mProcessingHandler: Handler
-    private lateinit var mSobelTask: ProcessingTask
-    private lateinit var mSobelScript: ScriptC_sobel
+    private var mProcessingHandler: Handler
+    private var mSobelTask: ProcessingTask
+    private var mSobelScript: ScriptC_sobel
+    private val rs = rs
+    private val dimensions = dimensions
 
-    fun ViewfinderProcessor(rs: RenderScript, dimensions: Size) {
+    init {
         val yuvTypeBuilder = Type.Builder(rs, Element.createPixel(rs,
             Element.DataType.UNSIGNED_8, Element.DataKind.PIXEL_YUV))
         yuvTypeBuilder.setX(dimensions.getWidth())
@@ -46,7 +48,7 @@ class SobelProcessor {
         processingThread.start()
         mProcessingHandler = Handler(processingThread.looper)
         mSobelScript = ScriptC_sobel(rs)
-        mSobelScript.set_gPrevFrame(mPrevAllocation)
+        mSobelScript._gPrevFrame = mPrevAllocation
         mSobelTask = ProcessingTask(mInputAllocation, mPrevAllocation, mOutputAllocation, mProcessingHandler, mSobelScript,dimensions.width, dimensions.height)
     }
 
@@ -63,12 +65,12 @@ class SobelProcessor {
         imageW: Int,
         imageH: Int
     ) :
-        Runnable {
+        Runnable, Allocation.OnBufferAvailableListener {
         private val mImageW = imageW
-        private val mImageH = imageW
+        private val mImageH = imageH
         private var mPendingFrames = 0
         private var mFrameCounter = 0
-        fun onBufferAvailable(a: Allocation?) {
+        override fun onBufferAvailable(a: Allocation?) {
             synchronized(this) {
                 mPendingFrames++
                 mProcessingHandler.post(this)
@@ -88,17 +90,18 @@ class SobelProcessor {
                 mInputAllocation.ioReceive()
             }
 
-            mSobelScript.bind_gPixels(mInputAllocation);
-            mSobelScript.set_gFrameCounter(mFrameCounter++)
-            mSobelScript.set_gCurrentFrame(mInputAllocation)
-            mSobelScript.set_gImageW(mImageW)
-            mSobelScript.set_gImageH(mImageH)
+            //mSobelScript.bind_gPixels(mInputAllocation);
+            mSobelScript._gFrameCounter = mFrameCounter++
+            mSobelScript._gCurrentFrame = mInputAllocation
+            mSobelScript._gImageW = mImageW
+            mSobelScript._gImageH = mImageH
             // Run processing pass
             mSobelScript.forEach_convolveKernel(mPrevAllocation, mOutputAllocation)
             mOutputAllocation.ioSend()
         }
 
         init {
+            mInputAllocation.setOnBufferAvailableListener(this);
         }
     }
 
@@ -107,9 +110,10 @@ class SobelProcessor {
     }
 
     fun getInputNormalSurface(): Surface {
+        return mInputAllocation.surface
     }
 
     fun setOutputSurface(output: Surface?) {
-        mOutputAllocation.setSurface(output)
+        mOutputAllocation.surface = output
     }
 }

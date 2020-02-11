@@ -39,40 +39,37 @@ uchar4 __attribute__((kernel)) convolveKernel(uchar4 in, uint32_t x, uint32_t y)
     uchar newPixel;
 
 
-		int pixelX;
-		int pixelY;
-		float newValX = 0.0f;
-		float newValY = 0.0f;
-		float newVal = 0.0f;
+    int pixelX;
+    int pixelY;
+    float newValX = 0.0f;
+    float newValY = 0.0f;
+    float newVal = 0.0f;
 
-		for (int maskX = 0; maskX < maskSize; ++maskX) {
-			for (int maskY = 0; maskY < maskSize; ++maskY) {
-				pixelX = (x - (maskSize / 2)) + maskX;
-				pixelY = (y - (maskSize / 2)) + maskY;
-				newValX += rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY) * convXMask[maskX][maskY];
-				newValY += rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY) * convYMask[maskX][maskY];
-			}
-		}
+    for (int maskX = 0; maskX < maskSize; ++maskX) {
+        for (int maskY = 0; maskY < maskSize; ++maskY) {
+            pixelX = (x - (maskSize / 2)) + maskX;
+            pixelY = (y - (maskSize / 2)) + maskY;
+            newValX += rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY) * convXMask[maskX][maskY];
+            newValY += rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY) * convYMask[maskX][maskY];
+        }
+    }
 
-		newPixel = sqrt(pow(newValX, 2) + pow(newValY, 2));
+    newPixel = sqrt(pow(newValX, 2) + pow(newValY, 2));
 
 
-		int4 rgb;
-            rgb.r = newPixel +
-                    newPixel * 1436 / 1024 - 179;
-            rgb.g = newPixel -
-                    newPixel * 46549 / 131072 + 44 -
-                    newPixel * 93604 / 131072 + 91;
-            rgb.b = newPixel +
-                    newPixel * 1814 / 1024 - 227;
-            rgb.a = 255;
+    int4 rgb;
+    rgb.r = newPixel * 1436 / 1024 - 179;
+    rgb.g = newPixel * 46549 / 131072 + 44 -
+            newPixel * 93604 / 131072 + 91;
+    rgb.b = newPixel * 1814 / 1024 - 227;
+    rgb.a = 255;
 
-            // Store current pixel for next frame
-            rsSetElementAt_uchar4(gPrevFrame, curPixel, x, y);
+    // Store current pixel for next frame
+    rsSetElementAt_uchar4(gPrevFrame, curPixel, x, y);
 
-            // Write out merged HDR result
-            uchar4 out = convert_uchar4(clamp(rgb, 0, 255));
+    // Write out merged HDR result
+    uchar4 out = convert_uchar4(clamp(rgb, 0, 255));
 
-		return fmax(0.0f, fmin(1.0f, newVal));
-	}
+    return out;
+}
 

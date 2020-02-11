@@ -6,22 +6,19 @@ import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.media.ImageReader
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.renderscript.RenderScript
 import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
-import androidx.core.content.ContextCompat.getSystemService
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
-import uk.ac.plymouth.interiordesign.MainActivity
-import uk.ac.plymouth.interiordesign.R
 import uk.ac.plymouth.interiordesign.SobelProcessor
-import java.util.*
+import uk.ac.plymouth.interiordesign.R
+
 
 /**
  * A simple [Fragment] subclass.
@@ -39,7 +36,8 @@ class CameraFragment : Fragment() {
     private lateinit var captureRequestBuilder: CaptureRequest.Builder
     private lateinit var cameraDevice : CameraDevice
     private lateinit var imageReader : ImageReader
-    private val sobelProcessor : SobelProcessor = SobelProcessor()
+    private lateinit var sobelProcessor : SobelProcessor
+    private lateinit var mRS: RenderScript
     /** [HandlerThread] where all buffer reading operations run */
     private val imageReaderThread = HandlerThread("imageReaderThread").apply { start() }
 
@@ -87,6 +85,9 @@ class CameraFragment : Fragment() {
         imageReader = ImageReader.newInstance(
             size.width, size.height, ImageFormat.YUV_420_888, IMAGE_BUFFER_SIZE)
 
+        // Configure processing
+        // Configure processing
+        sobelProcessor = SobelProcessor(mRS, size)
         sobelProcessor.setOutputSurface(surface)
 
         // Creates list of Surfaces where the camera will output frames
@@ -243,6 +244,11 @@ class CameraFragment : Fragment() {
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        mRS = RenderScript.create(this.activity!!);
     }
 
     private fun openCamera() {
