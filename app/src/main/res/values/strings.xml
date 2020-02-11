@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Interior Design</string>
+
+    <string name="camera_request_rationale">This app needs the camera permission to function</string>
+</resources>
