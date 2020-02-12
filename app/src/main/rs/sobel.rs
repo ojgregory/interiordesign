@@ -58,10 +58,11 @@ uchar4 __attribute__((kernel)) convolveKernel(uchar4 in, uint32_t x, uint32_t y)
 
 
     int4 rgb;
-    rgb.r = newPixel * 1436 / 1024 - 179;
-    rgb.g = newPixel * 46549 / 131072 + 44 -
-            newPixel * 93604 / 131072 + 91;
-    rgb.b = newPixel * 1814 / 1024 - 227;
+    newPixel -= 16;
+    rgb.r = newPixel;
+    rgb.g = newPixel;
+            newPixel;
+    rgb.b = newPixel;
     rgb.a = 255;
 
     // Store current pixel for next frame
