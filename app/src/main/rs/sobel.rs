@@ -3,9 +3,6 @@
 #pragma rs_fp_relaxed
 
 rs_allocation gCurrentFrame;
-rs_allocation gPrevFrame;
-
-const uchar4 *gPixels;
 int gCutPointX = 0;
 int gDoMerge = 0;
 int gFrameCounter = 0;
@@ -33,7 +30,7 @@ static float convYMask[maskSize][maskSize] = {
 // outPixels: device array where the modified image should be written.
 // imageW, imageH: width & height of the image.
 ////
-uchar4 __attribute__((kernel)) convolveKernel(uchar4 in, uint32_t x, uint32_t y) {
+uchar4 __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
     uchar curPixel;
     curPixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, x, y);
     uchar newPixel;
@@ -44,13 +41,15 @@ uchar4 __attribute__((kernel)) convolveKernel(uchar4 in, uint32_t x, uint32_t y)
     float newValX = 0.0f;
     float newValY = 0.0f;
     float newVal = 0.0f;
+    uchar pixel;
 
     for (int maskX = 0; maskX < maskSize; ++maskX) {
         for (int maskY = 0; maskY < maskSize; ++maskY) {
             pixelX = (x - (maskSize / 2)) + maskX;
             pixelY = (y - (maskSize / 2)) + maskY;
-            newValX += rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY) * convXMask[maskX][maskY];
-            newValY += rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY) * convYMask[maskX][maskY];
+            pixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY);
+            newValX += pixel * convXMask[maskX][maskY];
+            newValY += pixel * convYMask[maskX][maskY];
         }
     }
 
@@ -61,12 +60,8 @@ uchar4 __attribute__((kernel)) convolveKernel(uchar4 in, uint32_t x, uint32_t y)
     newPixel -= 16;
     rgb.r = newPixel;
     rgb.g = newPixel;
-            newPixel;
     rgb.b = newPixel;
     rgb.a = 255;
-
-    // Store current pixel for next frame
-    rsSetElementAt_uchar4(gPrevFrame, curPixel, x, y);
 
     // Write out merged HDR result
     uchar4 out = convert_uchar4(clamp(rgb, 0, 255));

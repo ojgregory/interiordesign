@@ -19,8 +19,6 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
     private var mProcessingHandler: Handler
     private var mSobelTask: ProcessingTask
     private var mSobelScript: ScriptC_sobel
-    private val rs = rs
-    private val dimensions = dimensions
 
     init {
         val yuvTypeBuilder = Type.Builder(rs, Element.createPixel(rs,
@@ -34,8 +32,8 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
         )
 
         val rgbTypeBuilder = Type.Builder(rs, Element.RGBA_8888(rs))
-        rgbTypeBuilder.setX(dimensions.getWidth())
-        rgbTypeBuilder.setY(dimensions.getHeight())
+        rgbTypeBuilder.setX(dimensions.width)
+        rgbTypeBuilder.setY(dimensions.height)
         mPrevAllocation = Allocation.createTyped(
             rs, rgbTypeBuilder.create(),
             Allocation.USAGE_SCRIPT
@@ -48,8 +46,7 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
         processingThread.start()
         mProcessingHandler = Handler(processingThread.looper)
         mSobelScript = ScriptC_sobel(rs)
-        mSobelScript._gPrevFrame = mPrevAllocation
-        mSobelTask = ProcessingTask(mInputAllocation, mPrevAllocation, mOutputAllocation, mProcessingHandler, mSobelScript,dimensions.width, dimensions.height)
+        mSobelTask = ProcessingTask(mInputAllocation, mOutputAllocation, mProcessingHandler, mSobelScript,dimensions.width, dimensions.height)
     }
 
     /**
@@ -58,7 +55,6 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
      */
     internal class ProcessingTask(
         private val mInputAllocation: Allocation,
-        private val mPrevAllocation: Allocation,
         private val mOutputAllocation: Allocation,
         private val mProcessingHandler: Handler,
         private val mSobelScript: ScriptC_sobel,
@@ -96,7 +92,7 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
             mSobelScript._gImageW = mImageW
             mSobelScript._gImageH = mImageH
             // Run processing pass
-            mSobelScript.forEach_convolveKernel(mPrevAllocation, mOutputAllocation)
+            mSobelScript.forEach_convolveKernel(mOutputAllocation)
             mOutputAllocation.ioSend()
         }
 

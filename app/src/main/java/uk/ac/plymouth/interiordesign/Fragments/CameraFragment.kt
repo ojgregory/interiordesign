@@ -1,23 +1,24 @@
 package uk.ac.plymouth.interiordesign.Fragments
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
-import android.media.ImageReader
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.renderscript.RenderScript
 import android.util.Log
+import android.util.Size
 import android.view.*
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
-import uk.ac.plymouth.interiordesign.SobelProcessor
 import uk.ac.plymouth.interiordesign.R
+import uk.ac.plymouth.interiordesign.SobelProcessor
 
 
 /**
@@ -34,20 +35,15 @@ class CameraFragment : Fragment() {
     private val MAX_PREVIEW_HEIGHT = 720
     private lateinit var captureSession: CameraCaptureSession
     private lateinit var captureRequestBuilder: CaptureRequest.Builder
-    private lateinit var cameraDevice : CameraDevice
-    private lateinit var imageReader : ImageReader
-    private lateinit var sobelProcessor : SobelProcessor
+    private lateinit var cameraDevice: CameraDevice
+    private lateinit var sobelProcessor: SobelProcessor
     private lateinit var mRS: RenderScript
-    /** [HandlerThread] where all buffer reading operations run */
-    private val imageReaderThread = HandlerThread("imageReaderThread").apply { start() }
+    private lateinit var mPreviewSurface: Surface
 
-    /** [Handler] corresponding to [imageReaderThread] */
-    private val imageReaderHandler = Handler(imageReaderThread.looper)
-
-    private val deviceStateCallback = object: CameraDevice.StateCallback() {
+    private val deviceStateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(camera: CameraDevice) {
             Log.d(TAG, "camera device opened")
-            if (camera != null){
+            if (camera != null) {
                 cameraDevice = camera
                 previewSession()
             }
@@ -74,25 +70,48 @@ class CameraFragment : Fragment() {
     private lateinit var backgroundHandler: Handler
 
     private fun previewSession() {
+        val MAX_WIDTH = 1280;
+        val TARGET_ASPECT = 16.0f / 9.0f;
+        val ASPECT_TOLERANCE = 0.1f;
         val surfaceTexture = textureview.surfaceTexture
-        surfaceTexture.setDefaultBufferSize(MAX_PREVIEW_WIDTH, MAX_PREVIEW_HEIGHT)
         val surface = Surface(surfaceTexture)
 
         // Initialize an image reader which will be used to apply filter to preview
-        val size = cameraCharacteristics(cameraId(CameraCharacteristics.LENS_FACING_BACK),
-            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
-            .getOutputSizes(ImageFormat.YUV_420_888).maxBy { it.height * it.width }!!
-        imageReader = ImageReader.newInstance(
-            size.width, size.height, ImageFormat.YUV_420_888, IMAGE_BUFFER_SIZE)
+        val outputSizes: Array<Size> = cameraCharacteristics(
+            cameraId(CameraCharacteristics.LENS_FACING_BACK),
+            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
+        )!!
+            .getOutputSizes(ImageFormat.YUV_420_888)
+
+        var outputSize: Size = outputSizes[0]
+        var outputAspect =
+            outputSize.width / outputSize.height
+        for (candidateSize in outputSizes) {
+            if (candidateSize.width > MAX_WIDTH) continue
+            val candidateAspect =
+                candidateSize.width / candidateSize.height
+            val goodCandidateAspect: Boolean =
+                Math.abs(candidateAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
+            val goodOutputAspect: Boolean =
+                Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
+            if (goodCandidateAspect && !goodOutputAspect ||
+                candidateSize.width > outputSize.width
+            ) {
+                outputSize = candidateSize
+                outputAspect = candidateAspect
+            }
+        }
+        Log.i(TAG, "Resolution chosen: $outputSize")
+        surfaceTexture.setDefaultBufferSize(outputSize.width, outputSize.height)
+
 
         // Configure processing
         // Configure processing
-        sobelProcessor = SobelProcessor(mRS, size)
+        sobelProcessor = SobelProcessor(mRS, outputSize)
         sobelProcessor.setOutputSurface(surface)
 
         // Creates list of Surfaces where the camera will output frames
         val targets = listOf(sobelProcessor.getInputNormalSurface())
-        imageReader.setOnImageAvailableListener(onImageReaderImageAvail(imageReader), imageReaderHandler)
 
         captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
         captureRequestBuilder.addTarget(sobelProcessor.getInputNormalSurface())
@@ -101,7 +120,7 @@ class CameraFragment : Fragment() {
 
         cameraDevice.createCaptureSession(
             targets,
-            object: CameraCaptureSession.StateCallback(){
+            object : CameraCaptureSession.StateCallback() {
                 override fun onConfigureFailed(session: CameraCaptureSession) {
                     Log.e(TAG, "creating capture session failed!")
                 }
@@ -109,18 +128,20 @@ class CameraFragment : Fragment() {
                 override fun onConfigured(session: CameraCaptureSession) {
                     if (session != null) {
                         captureSession = session
-                        captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
-                        captureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null)
+                        captureRequestBuilder.set(
+                            CaptureRequest.CONTROL_AF_MODE,
+                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                        )
+                        captureSession.setRepeatingRequest(
+                            captureRequestBuilder.build(),
+                            null,
+                            null
+                        )
                     }
                 }
 
-            }, null)
-    }
-
-    private fun onImageReaderImageAvail(reader: ImageReader) = ImageReader.OnImageAvailableListener {
-        val image = reader.acquireLatestImage()
-        Log.d(TAG, "Image available: ${image.timestamp}")
-        image.close()
+            }, null
+        )
     }
 
     private fun closeCamera() {
@@ -160,8 +181,7 @@ class CameraFragment : Fragment() {
     }
 
 
-
-    private fun <T> cameraCharacteristics(cameraId: String, key: CameraCharacteristics.Key<T>) : T? {
+    private fun <T> cameraCharacteristics(cameraId: String, key: CameraCharacteristics.Key<T>): T? {
         val characteristics = cameraManager.getCameraCharacteristics(cameraId)
         return when (key) {
             CameraCharacteristics.LENS_FACING -> characteristics.get(key)
@@ -170,17 +190,23 @@ class CameraFragment : Fragment() {
         }
     }
 
-    private fun cameraId(lens: Int) : String {
+    private fun cameraId(lens: Int): String {
         var deviceId = listOf<String>()
         try {
             val cameraIdList = cameraManager.cameraIdList
-            deviceId = cameraIdList.filter { lens == cameraCharacteristics(it, CameraCharacteristics.LENS_FACING) }
+            deviceId = cameraIdList.filter {
+                lens == cameraCharacteristics(
+                    it,
+                    CameraCharacteristics.LENS_FACING
+                )
+            }
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
         }
         return deviceId[0]
     }
 
+    @SuppressLint("MissingPermission")
     private fun connectCamera() {
         val deviceId = cameraId(CameraCharacteristics.LENS_FACING_BACK)
         Log.d(TAG, "deviceId: $deviceId")
@@ -196,12 +222,17 @@ class CameraFragment : Fragment() {
     companion object {
         const val REQUEST_CAMERA_PERMISSION = 100
         private val TAG = CameraFragment::class.qualifiedName
-        @JvmStatic fun newInstance() = CameraFragment()
+        @JvmStatic
+        fun newInstance() = CameraFragment()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions ,grantResults)
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     @AfterPermissionGranted(REQUEST_CAMERA_PERMISSION)
@@ -210,10 +241,12 @@ class CameraFragment : Fragment() {
             Log.d(TAG, "App has camera permission")
             connectCamera()
         } else {
-            EasyPermissions.requestPermissions(activity!!,
+            EasyPermissions.requestPermissions(
+                activity!!,
                 getString(R.string.camera_request_rationale),
                 REQUEST_CAMERA_PERMISSION,
-                Manifest.permission.CAMERA)
+                Manifest.permission.CAMERA
+            )
         }
     }
 
@@ -233,7 +266,11 @@ class CameraFragment : Fragment() {
         super.onPause()
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.fragment_camera, container, false)
     }
 
@@ -248,7 +285,7 @@ class CameraFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mRS = RenderScript.create(this.activity!!);
+        mRS = RenderScript.create(this.activity!!)
     }
 
     private fun openCamera() {
