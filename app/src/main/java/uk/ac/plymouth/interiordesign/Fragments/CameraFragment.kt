@@ -9,6 +9,7 @@ import android.hardware.camera2.*
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.renderscript.RenderScript
 import android.util.Log
 import android.util.Size
@@ -17,57 +18,24 @@ import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
+import uk.ac.plymouth.interiordesign.CameraWrapper
 import uk.ac.plymouth.interiordesign.R
 import uk.ac.plymouth.interiordesign.SobelProcessor
 
 
-/**
- * A simple [Fragment] subclass.
- * Activities that contain this fragment must implement the
- * [CameraFragment.OnFragmentInteractionListener] interface
- * to handle interaction events.
- * Use the [CameraFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class CameraFragment : Fragment() {
-    private val IMAGE_BUFFER_SIZE = 2
-    private val MAX_PREVIEW_WIDTH = 1280
-    private val MAX_PREVIEW_HEIGHT = 720
-    private lateinit var captureSession: CameraCaptureSession
-    private lateinit var captureRequestBuilder: CaptureRequest.Builder
-    private lateinit var cameraDevice: CameraDevice
+class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.CameraReadyListener {
     private lateinit var sobelProcessor: SobelProcessor
     private lateinit var mRS: RenderScript
-    private lateinit var mPreviewSurface: Surface
+    private lateinit var mUiHandler: Handler
+    private lateinit var mPreviewRequest: CaptureRequest
 
-    private val deviceStateCallback = object : CameraDevice.StateCallback() {
-        override fun onOpened(camera: CameraDevice) {
-            Log.d(TAG, "camera device opened")
-            if (camera != null) {
-                cameraDevice = camera
-                previewSession()
-            }
+    private var cameraWrapper: CameraWrapper? = null
 
-        }
-
-        override fun onDisconnected(camera: CameraDevice) {
-            Log.d(TAG, "camera device disconnected")
-            camera?.close()
-        }
-
-        override fun onError(camera: CameraDevice, error: Int) {
-            Log.d(TAG, "camera device error")
-            this@CameraFragment.activity?.finish()
-        }
-
-    }
 
     private val cameraManager by lazy {
         activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     }
 
-    private lateinit var backgroundThread: HandlerThread
-    private lateinit var backgroundHandler: Handler
 
     private fun previewSession() {
         val MAX_WIDTH = 1280;
@@ -102,8 +70,7 @@ class CameraFragment : Fragment() {
             }
         }
         Log.i(TAG, "Resolution chosen: $outputSize")
-        surfaceTexture.setDefaultBufferSize(outputSize.width, outputSize.height)
-
+        textureview.rotation = 90.0f
 
         // Configure processing
         // Configure processing
@@ -112,61 +79,15 @@ class CameraFragment : Fragment() {
 
         // Creates list of Surfaces where the camera will output frames
         val targets = listOf(sobelProcessor.getInputNormalSurface())
-
-        captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-        captureRequestBuilder.addTarget(sobelProcessor.getInputNormalSurface())
-        //captureRequestBuilder.addTarget(imageReader.surface)
-
-
-        cameraDevice.createCaptureSession(
-            targets,
-            object : CameraCaptureSession.StateCallback() {
-                override fun onConfigureFailed(session: CameraCaptureSession) {
-                    Log.e(TAG, "creating capture session failed!")
-                }
-
-                override fun onConfigured(session: CameraCaptureSession) {
-                    if (session != null) {
-                        captureSession = session
-                        captureRequestBuilder.set(
-                            CaptureRequest.CONTROL_AF_MODE,
-                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
-                        )
-                        captureSession.setRepeatingRequest(
-                            captureRequestBuilder.build(),
-                            null,
-                            null
-                        )
-                    }
-                }
-
-            }, null
-        )
+        cameraWrapper!!.setSurfaces(targets)
     }
 
-    private fun closeCamera() {
-        if (this::captureSession.isInitialized)
-            captureSession.close()
-        if (this::cameraDevice.isInitialized)
-            cameraDevice.close()
-    }
-
-    private fun startBackgroundThread() {
-        backgroundThread = HandlerThread("Camera2 Kotlin").also { it.start() }
-        backgroundHandler = Handler(backgroundThread.looper)
-    }
-
-    private fun stopBackgroundThread() {
-        backgroundThread.quitSafely()
-        try {
-            backgroundThread.join()
-        } catch (e: InterruptedException) {
-            Log.e(TAG, e.toString())
-        }
-    }
-
-    private val surfaceListener = object: TextureView.SurfaceTextureListener {
-        override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture?, width: Int, height: Int) {
+    private val surfaceListener = object : TextureView.SurfaceTextureListener {
+        override fun onSurfaceTextureSizeChanged(
+            surface: SurfaceTexture?,
+            width: Int,
+            height: Int
+        ) {
         }
 
         override fun onSurfaceTextureUpdated(surface: SurfaceTexture?) = Unit
@@ -206,24 +127,88 @@ class CameraFragment : Fragment() {
         return deviceId[0]
     }
 
-    @SuppressLint("MissingPermission")
-    private fun connectCamera() {
-        val deviceId = cameraId(CameraCharacteristics.LENS_FACING_BACK)
-        Log.d(TAG, "deviceId: $deviceId")
-        try {
-            cameraManager.openCamera(deviceId, deviceStateCallback, backgroundHandler)
-        } catch (e: CameraAccessException) {
-            Log.e(TAG, e.toString())
-        } catch (e: InterruptedException) {
-            Log.e(TAG, "Open camera device interrupted while opened")
-        }
-    }
-
     companion object {
         const val REQUEST_CAMERA_PERMISSION = 100
         private val TAG = CameraFragment::class.qualifiedName
         @JvmStatic
         fun newInstance() = CameraFragment()
+    }
+
+    /**
+     * Attempt to initialize the camera.
+     */
+    private fun initializeCamera() {
+        if (cameraManager != null) {
+            cameraWrapper = CameraWrapper(
+                cameraManager,  /*errorDisplayer*/
+                this,  /*readyListener*/
+                this,  /*readyHandler*/
+                mUiHandler
+            )
+        } else {
+            Log.e(
+                TAG,
+                "Couldn't initialize the camera"
+            )
+        }
+    }
+
+    private fun hasCapability(capabilities: IntArray, capability: Int): Boolean {
+        for (c in capabilities) {
+            if (c == capability) return true
+        }
+        return false
+    }
+
+    private fun findAndOpenCamera() {
+        var errorMessage: String? = "Unknown error"
+        var foundCamera = false
+        initializeCamera()
+        if (cameraWrapper != null) {
+            try { // Find first back-facing camera that has necessary capability.
+                val cameraIds: Array<String> = cameraManager.getCameraIdList()
+                for (id in cameraIds) {
+                    val info: CameraCharacteristics = cameraManager.getCameraCharacteristics(id)
+                    val facing = info.get(CameraCharacteristics.LENS_FACING)
+                    val level =
+                        info.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+                    val hasFullLevel =
+                        level == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL
+                    val capabilities = info
+                        .get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES)
+                    val syncLatency = info.get(CameraCharacteristics.SYNC_MAX_LATENCY)
+                    val hasManualControl: Boolean = hasCapability(
+                        capabilities!!,
+                        CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR
+                    )
+                    val hasEnoughCapability =
+                        hasManualControl && syncLatency == CameraCharacteristics.SYNC_MAX_LATENCY_PER_FRAME_CONTROL
+                    // All these are guaranteed by
+                    // CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL, but checking
+                    // for only the things we care about expands range of devices we can run on.
+                    // We want:
+                    //  - Back-facing camera
+                    //  - Manual sensor control
+                    //  - Per-frame synchronization (so that exposure can be changed every frame)
+                    if (facing == CameraCharacteristics.LENS_FACING_BACK &&
+                        (hasFullLevel || hasEnoughCapability)
+                    ) { // Found suitable camera - get info, open, and set up outputs
+                        cameraWrapper!!.openCamera(id)
+                        previewSession()
+                        foundCamera = true
+                        break
+                    }
+                }
+                if (!foundCamera) {
+                    //errorMessage = getString(R.string.camera_no_good)
+                }
+            } catch (e: CameraAccessException) {
+                errorMessage = getErrorString(e)
+            }
+            if (!foundCamera) {
+                showErrorDialog(errorMessage)
+            }
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -239,7 +224,7 @@ class CameraFragment : Fragment() {
     private fun checkCameraPermission() {
         if (EasyPermissions.hasPermissions(activity!!, Manifest.permission.CAMERA)) {
             Log.d(TAG, "App has camera permission")
-            connectCamera()
+            findAndOpenCamera()
         } else {
             EasyPermissions.requestPermissions(
                 activity!!,
@@ -252,8 +237,6 @@ class CameraFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-
-        startBackgroundThread()
         if (textureview.isAvailable)
             openCamera()
         else
@@ -261,9 +244,13 @@ class CameraFragment : Fragment() {
     }
 
     override fun onPause() {
-
-        stopBackgroundThread()
         super.onPause()
+        // Wait until camera is closed to ensure the next application can open it
+        // Wait until camera is closed to ensure the next application can open it
+        if (cameraWrapper != null) {
+            cameraWrapper!!.closeCameraAndWait()
+            cameraWrapper = null
+        }
     }
 
     override fun onCreateView(
@@ -286,9 +273,49 @@ class CameraFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mRS = RenderScript.create(this.activity!!)
+        mUiHandler = Handler(Looper.getMainLooper());
     }
 
     private fun openCamera() {
         checkCameraPermission()
+    }
+
+    override fun onCameraReady() {
+        // Ready to send requests in, so set them up
+        // Ready to send requests in, so set them up
+        try {
+            val previewBuilder: CaptureRequest.Builder =
+                cameraWrapper!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+            previewBuilder.addTarget(sobelProcessor.getInputNormalSurface())
+            mPreviewRequest = previewBuilder.build()
+            cameraWrapper!!.setRepeatingRequest(mPreviewRequest, null, mUiHandler)
+        } catch (e: CameraAccessException) {
+            val errorMessage = getErrorString(e)
+            showErrorDialog(errorMessage)
+        }
+    }
+
+    override fun showErrorDialog(errorMessage: String?) {
+        /**
+         * Utility methods
+
+        MessageDialogFragment.newInstance(errorMessage)
+        .show(
+        getSupportFragmentManager(),
+        com.example.android.hdrviewfinder.HdrViewfinderActivity.FRAGMENT_DIALOG
+        )
+         */
+
+    }
+
+    override fun getErrorString(e: CameraAccessException?): String? {
+        val errorMessage: String = "AAAAAA!"
+        /*errorMessage = when (e!!.reason) {
+            CameraAccessException.CAMERA_DISABLED -> getString(R.string.camera_disabled)
+            CameraAccessException.CAMERA_DISCONNECTED -> getString(R.string.camera_disconnected)
+            CameraAccessException.CAMERA_ERROR -> getString(R.string.camera_error)
+            else -> getString(R.string.camera_unknown, e.reason)
+        }*/
+        return errorMessage
     }
 }
