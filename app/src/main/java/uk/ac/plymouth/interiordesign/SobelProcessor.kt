@@ -46,7 +46,7 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
         processingThread.start()
         mProcessingHandler = Handler(processingThread.looper)
         mSobelScript = ScriptC_sobel(rs)
-        mSobelTask = ProcessingTask(mInputAllocation, mOutputAllocation, mProcessingHandler, mSobelScript,dimensions.width, dimensions.height)
+        mSobelTask = ProcessingTask(mInputAllocation, mOutputAllocation, mProcessingHandler, mSobelScript, dimensions.width, dimensions.height)
     }
 
     /**
@@ -65,7 +65,6 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
         private val mImageW = imageW
         private val mImageH = imageH
         private var mPendingFrames = 0
-        private var mFrameCounter = 0
         override fun onBufferAvailable(a: Allocation?) {
             synchronized(this) {
                 mPendingFrames++
@@ -86,8 +85,6 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
                 mInputAllocation.ioReceive()
             }
 
-            //mSobelScript.bind_gPixels(mInputAllocation);
-            mSobelScript._gFrameCounter = mFrameCounter++
             mSobelScript._gCurrentFrame = mInputAllocation
             mSobelScript._gImageW = mImageW
             mSobelScript._gImageH = mImageH
@@ -99,10 +96,6 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
         init {
             mInputAllocation.setOnBufferAvailableListener(this);
         }
-    }
-
-    private fun SobelKotlin() {
-
     }
 
     fun getInputNormalSurface(): Surface {

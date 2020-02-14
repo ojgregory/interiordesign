@@ -51,7 +51,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         )!!
             .getOutputSizes(ImageFormat.YUV_420_888)
 
-        var outputSize: Size = outputSizes[0]
+        var outputSize: Size = outputSizes.last()
         var outputAspect =
             outputSize.width / outputSize.height
         for (candidateSize in outputSizes) {

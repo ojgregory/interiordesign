@@ -3,9 +3,6 @@
 #pragma rs_fp_relaxed
 
 rs_allocation gCurrentFrame;
-int gCutPointX = 0;
-int gDoMerge = 0;
-int gFrameCounter = 0;
 
 int gImageW;
 int gImageH;
@@ -31,29 +28,29 @@ static float convYMask[maskSize][maskSize] = {
 // imageW, imageH: width & height of the image.
 ////
 uchar4 __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
-    uchar curPixel;
-    curPixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, x, y);
     uchar newPixel;
 
-
-    int pixelX;
-    int pixelY;
+    ulong pixelX;
+    ulong pixelY;
     float newValX = 0.0f;
     float newValY = 0.0f;
     float newVal = 0.0f;
-    uchar pixel;
+    uchar pixel = 0;
 
     for (int maskX = 0; maskX < maskSize; ++maskX) {
         for (int maskY = 0; maskY < maskSize; ++maskY) {
             pixelX = (x - (maskSize / 2)) + maskX;
             pixelY = (y - (maskSize / 2)) + maskY;
-            pixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY);
-            newValX += pixel * convXMask[maskX][maskY];
-            newValY += pixel * convYMask[maskX][maskY];
+            if (pixelX < gImageW && pixelY < gImageH) {
+                pixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY);
+                //rsDebug("pixel", pixel);
+                newValX = newValX + (float) (pixel * convXMask[maskX][maskY]);
+                newValY = newValY + (float) (pixel * convYMask[maskX][maskY]);
+            }
         }
     }
 
-    newPixel = sqrt(pow(newValX, 2) + pow(newValY, 2));
+    newPixel = (uchar) sqrt(pow(newValX, 2) + pow(newValY, 2));
 
 
     int4 rgb;
@@ -64,8 +61,28 @@ uchar4 __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
     rgb.a = 255;
 
     // Write out merged HDR result
-    uchar4 out = convert_uchar4(clamp(rgb, 0, 255));
+    return convert_uchar4(clamp(rgb, 0, 255));
+}
 
-    return out;
+////
+// CUDA kernel to convolve an image using the convolution kernel
+// stored in d_convMask.
+// inPixels: device array holding the original image data.
+// outPixels: device array where the modified image should be written.
+// imageW, imageH: width & height of the image.
+////
+uchar4 __attribute__((kernel)) greyscale(uint32_t x, uint32_t y) {
+    uchar curPixel;
+    curPixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, x, y);
+
+    int4 rgb;
+    curPixel -= 16;
+    rgb.r = curPixel;
+    rgb.g = curPixel;
+    rgb.b = curPixel;
+    rgb.a = 255;
+
+    // Write out merged HDR result
+    return convert_uchar4(clamp(rgb, 0, 255));
 }
 
