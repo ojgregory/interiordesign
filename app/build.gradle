@@ -5,6 +5,20 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
+    signingConfigs {
+        debug {
+            storeFile file('/home/oliver/keystores/keystore.jks')
+            storePassword 'Alfhar_99'
+            keyAlias = 'Signing Key'
+            keyPassword 'Portal_100'
+        }
+        release {
+            storeFile file('/home/oliver/keystores/keystore.jks')
+            storePassword 'Alfhar_99'
+            keyAlias = 'Signing Key'
+            keyPassword 'Portal_100'
+        }
+    }
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
     defaultConfig {
@@ -14,14 +28,15 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        renderscriptTargetApi 21
-        renderscriptSupportModeEnabled true
-
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            signingConfig signingConfigs.debug
         }
     }
 }
