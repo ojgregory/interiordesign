@@ -15,10 +15,10 @@ class GaussianCalculator(sigma : Double, maskSize: Int) {
         get() = field
         set(value) {
             field = value
-            kernel = DoubleArray(value)
+            kernel = FloatArray(value)
             createGaussianKernel()
         }
-    var kernel = DoubleArray(maskSize)
+    var kernel = FloatArray(maskSize)
 
 
     fun createGaussianKernel() {
@@ -29,13 +29,13 @@ class GaussianCalculator(sigma : Double, maskSize: Int) {
 
         for  (i in 0 until mMaskSize) {
             var x = i - (mMaskSize / 2)
-            kernel[i] = constant * exp(-(x * x) / divisor)
+            kernel[i] = (constant * exp(-(x * x) / divisor)).toFloat()
             acc += kernel[i]
         }
 
         for (i in 0 until mMaskSize) {
-            kernel[i] = kernel[i] / acc
-            kernel[i] = Math.round(kernel[i] * 100000.0) / 100000.0
+            kernel[i] = (kernel[i] / acc).toFloat()
+            kernel[i] = (Math.round(kernel[i] * 100000.0) / 100000.0).toFloat()
         }
 
     }
