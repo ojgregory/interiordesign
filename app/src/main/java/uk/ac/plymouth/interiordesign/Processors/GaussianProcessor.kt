@@ -12,11 +12,11 @@ import android.renderscript.Type
 import uk.ac.plymouth.interiordesign.ScriptC_gaussian
 
 
-class GaussianProcessor(rs: RenderScript, dimensions: Size) {
-    private var mInputAllocation: Allocation
+class GaussianProcessor(rs: RenderScript, dimensions: Size) : PreProcessor {
+    override lateinit var mInputAllocation: Allocation
     private var mTempAllocation: Allocation
     private var mKernelAllocation: Allocation
-    private var mOutputAllocation: Allocation
+    override lateinit var mOutputAllocation: Allocation
 
     private var mProcessingHandler: Handler
     private var mGaussianTask: ProcessingTask
@@ -43,7 +43,7 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) {
         rgbTypeBuilder.setY(dimensions.height)
 
         mOutputAllocation = Allocation.createTyped(
-            rs, rgbTypeBuilder.create(),
+            rs, yuvTypeBuilder.create(),
             Allocation.USAGE_IO_OUTPUT or Allocation.USAGE_SCRIPT
         )
         val processingThread = HandlerThread("GaussianProcessor")
@@ -124,13 +124,5 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) {
         init {
             mInputAllocation.setOnBufferAvailableListener(this);
         }
-    }
-
-    fun getInputNormalSurface(): Surface {
-        return mInputAllocation.surface
-    }
-
-    fun setOutputSurface(output: Surface?) {
-        mOutputAllocation.surface = output
     }
 }

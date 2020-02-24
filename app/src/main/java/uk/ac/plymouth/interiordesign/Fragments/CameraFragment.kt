@@ -18,13 +18,13 @@ import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 import uk.ac.plymouth.interiordesign.CameraWrapper
 import uk.ac.plymouth.interiordesign.Processors.GaussianProcessor
+import uk.ac.plymouth.interiordesign.Processors.ProcessingCoordinator
 import uk.ac.plymouth.interiordesign.R
 import uk.ac.plymouth.interiordesign.Processors.SobelProcessor
 
 
 class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.CameraReadyListener {
-    private lateinit var sobelProcessor: SobelProcessor
-    private lateinit var gaussianProcessor: GaussianProcessor
+    private lateinit var processingCoordinator: ProcessingCoordinator
     private lateinit var mRS: RenderScript
     private lateinit var mUiHandler: Handler
     private lateinit var mPreviewRequest: CaptureRequest
@@ -74,25 +74,16 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
         // Configure processing
         // Configure processing
-        sobelProcessor = SobelProcessor(
+        processingCoordinator = ProcessingCoordinator(
+            0,
+            0,
             mRS,
             outputSize
         )
-        //sobelProcessor.setOutputSurface(surface)
+        processingCoordinator.setOutputSurface(surface)
 
         // Creates list of Surfaces where the camera will output frames
-        //val targets = listOf(sobelProcessor.getInputNormalSurface())
-
-        // Configure processing
-        // Configure processing
-        gaussianProcessor = GaussianProcessor(
-            mRS,
-            outputSize
-        )
-        gaussianProcessor.setOutputSurface(surface)
-
-        // Creates list of Surfaces where the camera will output frames
-        val targets = listOf(gaussianProcessor.getInputNormalSurface())
+        val targets = listOf(processingCoordinator.getInputSurface())
         cameraWrapper!!.setSurfaces(targets)
     }
 
@@ -301,7 +292,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             val previewBuilder: CaptureRequest.Builder =
                 cameraWrapper!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
             //previewBuilder.addTarget(sobelProcessor.getInputNormalSurface())
-            previewBuilder.addTarget(gaussianProcessor.getInputNormalSurface())
+            previewBuilder.addTarget(processingCoordinator.getInputSurface())
             mPreviewRequest = previewBuilder.build()
             cameraWrapper!!.setRepeatingRequest(mPreviewRequest, null, mUiHandler)
         } catch (e: CameraAccessException) {

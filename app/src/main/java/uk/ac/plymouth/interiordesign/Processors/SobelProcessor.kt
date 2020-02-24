@@ -12,10 +12,9 @@ import android.renderscript.Type
 import uk.ac.plymouth.interiordesign.ScriptC_sobel
 
 
-class SobelProcessor(rs: RenderScript, dimensions: Size) {
-    private var mInputAllocation: Allocation
-    private var mPrevAllocation: Allocation
-    private var mOutputAllocation: Allocation
+class SobelProcessor(rs: RenderScript, dimensions: Size) : Processor {
+    override lateinit var mInputAllocation: Allocation
+    override lateinit var mOutputAllocation: Allocation
 
     private var mProcessingHandler: Handler
     private var mSobelTask: ProcessingTask
@@ -35,10 +34,6 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
         val rgbTypeBuilder = Type.Builder(rs, Element.RGBA_8888(rs))
         rgbTypeBuilder.setX(dimensions.width)
         rgbTypeBuilder.setY(dimensions.height)
-        mPrevAllocation = Allocation.createTyped(
-            rs, rgbTypeBuilder.create(),
-            Allocation.USAGE_SCRIPT
-        )
         mOutputAllocation = Allocation.createTyped(
             rs, rgbTypeBuilder.create(),
             Allocation.USAGE_IO_OUTPUT or Allocation.USAGE_SCRIPT
@@ -107,11 +102,4 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
         }
     }
 
-    fun getInputNormalSurface(): Surface {
-        return mInputAllocation.surface
-    }
-
-    fun setOutputSurface(output: Surface?) {
-        mOutputAllocation.surface = output
-    }
 }
