@@ -1,4 +1,4 @@
-package uk.ac.plymouth.interiordesign
+package uk.ac.plymouth.interiordesign.Processors
 
 import android.graphics.ImageFormat
 import android.os.Handler
@@ -9,6 +9,7 @@ import android.renderscript.Allocation
 import android.renderscript.Element
 import android.renderscript.RenderScript
 import android.renderscript.Type
+import uk.ac.plymouth.interiordesign.ScriptC_sobel
 
 
 class SobelProcessor(rs: RenderScript, dimensions: Size) {
@@ -46,7 +47,15 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) {
         processingThread.start()
         mProcessingHandler = Handler(processingThread.looper)
         mSobelScript = ScriptC_sobel(rs)
-        mSobelTask = ProcessingTask(mInputAllocation, mOutputAllocation, mProcessingHandler, mSobelScript, dimensions.width, dimensions.height)
+        mSobelTask =
+            ProcessingTask(
+                mInputAllocation,
+                mOutputAllocation,
+                mProcessingHandler,
+                mSobelScript,
+                dimensions.width,
+                dimensions.height
+            )
     }
 
     /**

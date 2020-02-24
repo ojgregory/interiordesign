@@ -1,14 +1,12 @@
 package uk.ac.plymouth.interiordesign.Fragments
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.os.Bundle
 import android.os.Handler
-import android.os.HandlerThread
 import android.os.Looper
 import android.renderscript.RenderScript
 import android.util.Log
@@ -19,12 +17,14 @@ import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 import uk.ac.plymouth.interiordesign.CameraWrapper
+import uk.ac.plymouth.interiordesign.Processors.GaussianProcessor
 import uk.ac.plymouth.interiordesign.R
-import uk.ac.plymouth.interiordesign.SobelProcessor
+import uk.ac.plymouth.interiordesign.Processors.SobelProcessor
 
 
 class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.CameraReadyListener {
     private lateinit var sobelProcessor: SobelProcessor
+    private lateinit var gaussianProcessor: GaussianProcessor
     private lateinit var mRS: RenderScript
     private lateinit var mUiHandler: Handler
     private lateinit var mPreviewRequest: CaptureRequest
@@ -74,11 +74,25 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
         // Configure processing
         // Configure processing
-        sobelProcessor = SobelProcessor(mRS, outputSize)
-        sobelProcessor.setOutputSurface(surface)
+        sobelProcessor = SobelProcessor(
+            mRS,
+            outputSize
+        )
+        //sobelProcessor.setOutputSurface(surface)
 
         // Creates list of Surfaces where the camera will output frames
-        val targets = listOf(sobelProcessor.getInputNormalSurface())
+        //val targets = listOf(sobelProcessor.getInputNormalSurface())
+
+        // Configure processing
+        // Configure processing
+        gaussianProcessor = GaussianProcessor(
+            mRS,
+            outputSize
+        )
+        gaussianProcessor.setOutputSurface(surface)
+
+        // Creates list of Surfaces where the camera will output frames
+        val targets = listOf(gaussianProcessor.getInputNormalSurface())
         cameraWrapper!!.setSurfaces(targets)
     }
 
@@ -286,7 +300,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         try {
             val previewBuilder: CaptureRequest.Builder =
                 cameraWrapper!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-            previewBuilder.addTarget(sobelProcessor.getInputNormalSurface())
+            //previewBuilder.addTarget(sobelProcessor.getInputNormalSurface())
+            previewBuilder.addTarget(gaussianProcessor.getInputNormalSurface())
             mPreviewRequest = previewBuilder.build()
             cameraWrapper!!.setRepeatingRequest(mPreviewRequest, null, mUiHandler)
         } catch (e: CameraAccessException) {
