@@ -14,6 +14,7 @@ import uk.ac.plymouth.interiordesign.ScriptC_gaussian
 
 class GaussianProcessor(rs: RenderScript, dimensions: Size) {
     private var mInputAllocation: Allocation
+    private var mTempAllocation: Allocation
     private var mKernelAllocation: Allocation
     private var mOutputAllocation: Allocation
 
@@ -24,12 +25,17 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) {
     init {
         val yuvTypeBuilder = Type.Builder(rs, Element.createPixel(rs,
             Element.DataType.UNSIGNED_8, Element.DataKind.PIXEL_YUV))
-        yuvTypeBuilder.setX(dimensions.getWidth())
-        yuvTypeBuilder.setY(dimensions.getHeight())
+        yuvTypeBuilder.setX(dimensions.width)
+        yuvTypeBuilder.setY(dimensions.height)
         yuvTypeBuilder.setYuvFormat(ImageFormat.YUV_420_888)
         mInputAllocation = Allocation.createTyped(
             rs, yuvTypeBuilder.create(),
             Allocation.USAGE_IO_INPUT or Allocation.USAGE_SCRIPT
+        )
+
+        mTempAllocation = Allocation.createTyped(
+            rs, yuvTypeBuilder.create(),
+            Allocation.USAGE_SCRIPT
         )
 
         val rgbTypeBuilder = Type.Builder(rs, Element.RGBA_8888(rs))
@@ -45,7 +51,7 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) {
         mProcessingHandler = Handler(processingThread.looper)
         mGaussianScript = ScriptC_gaussian(rs)
 
-        val gaussianCalculator = GaussianCalculator(1.5, 5)
+        val gaussianCalculator = GaussianCalculator(1.0, 5)
         gaussianCalculator.createGaussianKernel()
 
         mKernelAllocation = Allocation.createSized(rs, Element.F32(rs), 5)
@@ -53,6 +59,7 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) {
         mGaussianTask =
             ProcessingTask(
                 mInputAllocation,
+                mTempAllocation,
                 mOutputAllocation,
                 mKernelAllocation,
                 mProcessingHandler,
@@ -69,6 +76,7 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) {
      */
     internal class ProcessingTask(
         private val mInputAllocation: Allocation,
+        private val mTempAllocation: Allocation,
         private val mOutputAllocation: Allocation,
         private val mKernelAllocation: Allocation,
         private val mProcessingHandler: Handler,
@@ -106,9 +114,9 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) {
             mGaussianScript._gImageH = mImageH
             mGaussianScript._gMaskSize = mGaussianCalculator.mMaskSize
             mGaussianScript.bind_gConvMask1d(mKernelAllocation)
-            mGaussianScript.forEach_convolve_kernel_row(mOutputAllocation)
+            mGaussianScript.forEach_convolve_kernel_row(mTempAllocation)
             // Run processing pass
-            mGaussianScript._gCurrentFrame = mOutputAllocation
+            mGaussianScript._gCurrentFrame = mTempAllocation
             mGaussianScript.forEach_convolve_kernel_col(mOutputAllocation)
             mOutputAllocation.ioSend()
         }
