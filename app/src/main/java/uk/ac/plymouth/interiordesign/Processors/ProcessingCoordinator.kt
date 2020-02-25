@@ -13,8 +13,8 @@ import android.view.Surface
 class ProcessingCoordinator(
     preProcessorChoice: Int,
     processorChoice: Int,
-    rs: RenderScript,
-    dimensions: Size
+    private val rs: RenderScript,
+    private val dimensions: Size
 ) {
     private lateinit var preProcessor: PreProcessor
     private lateinit var processor: Processor
@@ -58,22 +58,9 @@ class ProcessingCoordinator(
             Allocation.USAGE_IO_OUTPUT or Allocation.USAGE_SCRIPT
         )
 
-        when (preProcessorChoice) {
-            0 -> preProcessor = GaussianProcessor(
-                rs,
-                dimensions,
-                inputAllocation,
-                preProcessedAllocation,
-                tempAllocation,
-                10.0,
-                5
-            )
-        }
 
-        when (processorChoice) {
-            0 -> processor =
-                SobelProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
-        }
+        choosePreProcessor(preProcessorChoice)
+        chooseProcessor(processorChoice)
 
         val processingThread = HandlerThread("ProcessingCoordinator")
         processingThread.start()
