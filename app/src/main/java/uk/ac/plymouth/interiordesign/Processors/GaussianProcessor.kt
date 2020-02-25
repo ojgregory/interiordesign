@@ -12,14 +12,16 @@ import android.renderscript.Type
 import uk.ac.plymouth.interiordesign.ScriptC_gaussian
 
 
-class GaussianProcessor(rs: RenderScript, dimensions: Size) : PreProcessor {
-    override lateinit var mInputAllocation: Allocation
-    private var mTempAllocation: Allocation
+class GaussianProcessor(rs: RenderScript, private val dimensions: Size,
+                        override var mInputAllocation: Allocation,
+                        override var mOutputAllocation: Allocation,
+                        override var mTempAllocation: Allocation
+) : PreProcessor {
     private var mKernelAllocation: Allocation
-    override lateinit var mOutputAllocation: Allocation
+    private var gaussianCalculator : GaussianCalculator
 
-    private var mProcessingHandler: Handler
-    private var mGaussianTask: ProcessingTask
+    //private var mProcessingHandler: Handler
+    //private var mGaussianTask: ProcessingTask
     private var mGaussianScript: ScriptC_gaussian
 
     init {
@@ -28,17 +30,17 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) : PreProcessor {
         yuvTypeBuilder.setX(dimensions.width)
         yuvTypeBuilder.setY(dimensions.height)
         yuvTypeBuilder.setYuvFormat(ImageFormat.YUV_420_888)
-        mInputAllocation = Allocation.createTyped(
+        /*mInputAllocation = Allocation.createTyped(
             rs, yuvTypeBuilder.create(),
             Allocation.USAGE_IO_INPUT or Allocation.USAGE_SCRIPT
-        )
+        )*/
 
         mTempAllocation = Allocation.createTyped(
             rs, yuvTypeBuilder.create(),
             Allocation.USAGE_SCRIPT
         )
 
-        val rgbTypeBuilder = Type.Builder(rs, Element.RGBA_8888(rs))
+        /*val rgbTypeBuilder = Type.Builder(rs, Element.RGBA_8888(rs))
         rgbTypeBuilder.setX(dimensions.width)
         rgbTypeBuilder.setY(dimensions.height)
 
@@ -48,15 +50,15 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) : PreProcessor {
         )
         val processingThread = HandlerThread("GaussianProcessor")
         processingThread.start()
-        mProcessingHandler = Handler(processingThread.looper)
+        mProcessingHandler = Handler(processingThread.looper)*/
         mGaussianScript = ScriptC_gaussian(rs)
 
-        val gaussianCalculator = GaussianCalculator(1.0, 5)
+        gaussianCalculator = GaussianCalculator(10.0, 5)
         gaussianCalculator.createGaussianKernel()
 
         mKernelAllocation = Allocation.createSized(rs, Element.F32(rs), 5)
         mKernelAllocation.copyFrom(gaussianCalculator.kernel)
-        mGaussianTask =
+        /*mGaussianTask =
             ProcessingTask(
                 mInputAllocation,
                 mTempAllocation,
@@ -67,7 +69,7 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) : PreProcessor {
                 gaussianCalculator,
                 dimensions.width,
                 dimensions.height
-            )
+            )*/
     }
 
     /**
@@ -124,5 +126,17 @@ class GaussianProcessor(rs: RenderScript, dimensions: Size) : PreProcessor {
         init {
             mInputAllocation.setOnBufferAvailableListener(this);
         }
+    }
+
+    override fun run() {
+        mGaussianScript._gCurrentFrame = mInputAllocation
+        mGaussianScript._gImageW = dimensions.width
+        mGaussianScript._gImageH = dimensions.height
+        mGaussianScript._gMaskSize = gaussianCalculator.mMaskSize
+        mGaussianScript.bind_gConvMask1d(mKernelAllocation)
+        mGaussianScript.forEach_convolve_kernel_row(mTempAllocation)
+        // Run processing pass
+        mGaussianScript._gCurrentFrame = mTempAllocation
+        mGaussianScript.forEach_convolve_kernel_col(mOutputAllocation)
     }
 }

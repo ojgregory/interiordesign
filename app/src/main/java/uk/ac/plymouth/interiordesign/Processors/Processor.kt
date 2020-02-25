@@ -1,6 +1,7 @@
 package uk.ac.plymouth.interiordesign.Processors
 
 import android.graphics.ImageFormat
+import android.media.ImageReader
 import android.renderscript.Allocation
 import android.renderscript.Element
 import android.renderscript.RenderScript
@@ -11,6 +12,8 @@ import android.view.Surface
 interface Processor {
     var mInputAllocation: Allocation
     var mOutputAllocation: Allocation
+
+    fun run()
 
     fun getInputSurface() : Surface {
         return mInputAllocation.surface

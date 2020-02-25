@@ -6,6 +6,9 @@ import android.view.Surface
 interface PreProcessor {
     var mInputAllocation: Allocation
     var mOutputAllocation: Allocation
+    var mTempAllocation: Allocation
+
+    fun run()
 
     fun getInputSurface() : Surface {
         return mInputAllocation.surface

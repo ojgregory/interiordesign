@@ -1,6 +1,9 @@
 package uk.ac.plymouth.interiordesign.Processors
 
 import android.graphics.ImageFormat
+import android.media.Image
+import android.media.ImageReader
+import android.media.ImageWriter
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Size
@@ -12,16 +15,18 @@ import android.renderscript.Type
 import uk.ac.plymouth.interiordesign.ScriptC_sobel
 
 
-class SobelProcessor(rs: RenderScript, dimensions: Size) : Processor {
-    override lateinit var mInputAllocation: Allocation
-    override lateinit var mOutputAllocation: Allocation
+class SobelProcessor(rs: RenderScript, private val dimensions: Size,
+                     override var mInputAllocation: Allocation,
+                     override var mOutputAllocation: Allocation
+) : Processor {
 
-    private var mProcessingHandler: Handler
-    private var mSobelTask: ProcessingTask
+    //private var mProcessingHandler: Handler
+    //private var mSobelTask: ProcessingTask
     private var mSobelScript: ScriptC_sobel
 
+
     init {
-        val yuvTypeBuilder = Type.Builder(rs, Element.createPixel(rs,
+       /* val yuvTypeBuilder = Type.Builder(rs, Element.createPixel(rs,
             Element.DataType.UNSIGNED_8, Element.DataKind.PIXEL_YUV))
         yuvTypeBuilder.setX(dimensions.getWidth())
         yuvTypeBuilder.setY(dimensions.getHeight())
@@ -37,12 +42,10 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) : Processor {
         mOutputAllocation = Allocation.createTyped(
             rs, rgbTypeBuilder.create(),
             Allocation.USAGE_IO_OUTPUT or Allocation.USAGE_SCRIPT
-        )
-        val processingThread = HandlerThread("SobelProcessor")
-        processingThread.start()
-        mProcessingHandler = Handler(processingThread.looper)
+        )*/
+
         mSobelScript = ScriptC_sobel(rs)
-        mSobelTask =
+        /*mSobelTask =
             ProcessingTask(
                 mInputAllocation,
                 mOutputAllocation,
@@ -50,7 +53,7 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) : Processor {
                 mSobelScript,
                 dimensions.width,
                 dimensions.height
-            )
+            )*/
     }
 
     /**
@@ -100,6 +103,14 @@ class SobelProcessor(rs: RenderScript, dimensions: Size) : Processor {
         init {
             mInputAllocation.setOnBufferAvailableListener(this);
         }
+    }
+
+    override fun run() {
+        mSobelScript._gCurrentFrame = mInputAllocation
+        mSobelScript._gImageW = dimensions.width
+        mSobelScript._gImageH = dimensions.height
+        // Run processing pass
+        mSobelScript.forEach_convolveKernel(mOutputAllocation)
     }
 
 }
