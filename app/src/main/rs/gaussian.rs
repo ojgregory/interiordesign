@@ -50,7 +50,7 @@ uchar __attribute__((kernel)) convolve_kernel_row(uint32_t x, uint32_t y)
 // out_pixels: device array where the modified image should be written.
 // image_w, image_h: width & height of the image.
 ////
-uchar4 __attribute__((kernel)) convolve_kernel_col(uint32_t x, uint32_t y)
+uchar __attribute__((kernel)) convolve_kernel_col(uint32_t x, uint32_t y)
 {
         ulong pixelY;
         uchar new_val = 0;
@@ -63,13 +63,6 @@ uchar4 __attribute__((kernel)) convolve_kernel_col(uint32_t x, uint32_t y)
             }
         }
 
-        int4 rgb;
-        new_val -= 16;
-        rgb.r = new_val;
-        rgb.g = new_val;
-        rgb.b = new_val;
-        rgb.a = 255;
-
         // Write out merged HDR result
-        return convert_uchar4(clamp(rgb, 0, 255));
+        return new_val;
 }

@@ -12,19 +12,20 @@ import android.renderscript.RenderScript
 import android.util.Log
 import android.util.Size
 import android.view.*
+import android.widget.AdapterView
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 import uk.ac.plymouth.interiordesign.CameraWrapper
 import uk.ac.plymouth.interiordesign.Processors.GaussianProcessor
+import uk.ac.plymouth.interiordesign.Processors.ProcessingCoordinator
 import uk.ac.plymouth.interiordesign.R
 import uk.ac.plymouth.interiordesign.Processors.SobelProcessor
 
 
 class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.CameraReadyListener {
-    private lateinit var sobelProcessor: SobelProcessor
-    private lateinit var gaussianProcessor: GaussianProcessor
+    private lateinit var processingCoordinator: ProcessingCoordinator
     private lateinit var mRS: RenderScript
     private lateinit var mUiHandler: Handler
     private lateinit var mPreviewRequest: CaptureRequest
@@ -74,25 +75,16 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
         // Configure processing
         // Configure processing
-        sobelProcessor = SobelProcessor(
+        processingCoordinator = ProcessingCoordinator(
+            0,
+            0,
             mRS,
             outputSize
         )
-        //sobelProcessor.setOutputSurface(surface)
+        processingCoordinator.setOutputSurface(surface)
 
         // Creates list of Surfaces where the camera will output frames
-        //val targets = listOf(sobelProcessor.getInputNormalSurface())
-
-        // Configure processing
-        // Configure processing
-        gaussianProcessor = GaussianProcessor(
-            mRS,
-            outputSize
-        )
-        gaussianProcessor.setOutputSurface(surface)
-
-        // Creates list of Surfaces where the camera will output frames
-        val targets = listOf(gaussianProcessor.getInputNormalSurface())
+        val targets = listOf(processingCoordinator.getInputSurface())
         cameraWrapper!!.setSurfaces(targets)
     }
 
@@ -249,12 +241,37 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
     }
 
+    private val processorSpinnerListener = object : AdapterView.OnItemSelectedListener {
+        override fun onNothingSelected(parent: AdapterView<*>?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            processingCoordinator.chooseProcessor(position)
+        }
+    }
+
+    private val preProcessorSpinnerListener = object : AdapterView.OnItemSelectedListener {
+        override fun onNothingSelected(parent: AdapterView<*>?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            processingCoordinator.choosePreProcessor(position)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         if (textureview.isAvailable)
             openCamera()
         else
             textureview.surfaceTextureListener = surfaceListener
+
+        activity?.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
     }
 
     override fun onPause() {
@@ -265,6 +282,13 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             cameraWrapper!!.closeCameraAndWait()
             cameraWrapper = null
         }
+
+        processingCoordinator.closeAllocations()
+
+        activity?.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
     }
 
     override fun onCreateView(
@@ -282,6 +306,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        preprocesserSpinner.onItemSelectedListener = preProcessorSpinnerListener
+        processorSpinner.onItemSelectedListener = processorSpinnerListener
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -301,7 +327,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             val previewBuilder: CaptureRequest.Builder =
                 cameraWrapper!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
             //previewBuilder.addTarget(sobelProcessor.getInputNormalSurface())
-            previewBuilder.addTarget(gaussianProcessor.getInputNormalSurface())
+            previewBuilder.addTarget(processingCoordinator.getInputSurface())
             mPreviewRequest = previewBuilder.build()
             cameraWrapper!!.setRepeatingRequest(mPreviewRequest, null, mUiHandler)
         } catch (e: CameraAccessException) {
