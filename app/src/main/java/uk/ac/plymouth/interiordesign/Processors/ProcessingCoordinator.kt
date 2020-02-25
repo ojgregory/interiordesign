@@ -135,4 +135,31 @@ class ProcessingCoordinator(
     fun getInputSurface(): Surface {
         return inputAllocation.surface
     }
+
+    fun chooseProcessor(processorChoice: Int) {
+        when (processorChoice) {
+            0 -> processor =
+                SobelProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
+        }
+    }
+
+    fun choosePreProcessor(preProcessorChoice: Int) {
+        when (preProcessorChoice) {
+            0 -> preProcessor = GaussianProcessor(
+                rs,
+                dimensions,
+                inputAllocation,
+                preProcessedAllocation,
+                tempAllocation,
+                10.0,
+                5
+            )
+        }
+    }
+
+    fun closeAllocations() {
+        inputAllocation.destroy()
+        outputAllocation.destroy()
+        tempAllocation.destroy()
+    }
 }

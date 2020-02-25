@@ -12,6 +12,7 @@ import android.renderscript.RenderScript
 import android.util.Log
 import android.util.Size
 import android.view.*
+import android.widget.AdapterView
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
@@ -240,12 +241,37 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
     }
 
+    private val processorSpinnerListener = object : AdapterView.OnItemSelectedListener {
+        override fun onNothingSelected(parent: AdapterView<*>?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            processingCoordinator.chooseProcessor(position)
+        }
+    }
+
+    private val preProcessorSpinnerListener = object : AdapterView.OnItemSelectedListener {
+        override fun onNothingSelected(parent: AdapterView<*>?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            processingCoordinator.choosePreProcessor(position)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         if (textureview.isAvailable)
             openCamera()
         else
             textureview.surfaceTextureListener = surfaceListener
+
+        activity?.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
     }
 
     override fun onPause() {
@@ -256,6 +282,13 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             cameraWrapper!!.closeCameraAndWait()
             cameraWrapper = null
         }
+
+        processingCoordinator.closeAllocations()
+
+        activity?.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
     }
 
     override fun onCreateView(
@@ -273,6 +306,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        preprocesserSpinner.onItemSelectedListener = preProcessorSpinnerListener
+        processorSpinner.onItemSelectedListener = processorSpinnerListener
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
