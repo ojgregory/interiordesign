@@ -20,6 +20,7 @@ class ProcessingCoordinator(
     private lateinit var processor: Processor
     private var inputAllocation: Allocation
     private var outputAllocation: Allocation
+    private var tempAllocation: Allocation
     private var preProcessedAllocation: Allocation
     private var processingHandler: Handler
     private var processingTask: ProcessingTask
@@ -44,6 +45,11 @@ class ProcessingCoordinator(
             Allocation.USAGE_SCRIPT
         )
 
+        tempAllocation = Allocation.createTyped(
+            rs, yuvTypeBuilder.create(),
+            Allocation.USAGE_SCRIPT
+        )
+
         val rgbTypeBuilder = Type.Builder(rs, Element.RGBA_8888(rs))
         rgbTypeBuilder.setX(dimensions.width)
         rgbTypeBuilder.setY(dimensions.height)
@@ -53,7 +59,15 @@ class ProcessingCoordinator(
         )
 
         when (preProcessorChoice) {
-            0 -> preProcessor = GaussianProcessor(rs, dimensions, inputAllocation, preProcessedAllocation, outputAllocation)
+            0 -> preProcessor = GaussianProcessor(
+                rs,
+                dimensions,
+                inputAllocation,
+                preProcessedAllocation,
+                tempAllocation,
+                10.0,
+                5
+            )
         }
 
         when (processorChoice) {
@@ -69,10 +83,8 @@ class ProcessingCoordinator(
             processor,
             preProcessor,
             processingHandler,
-            dimensions,
             inputAllocation,
-            outputAllocation,
-            preProcessedAllocation
+            outputAllocation
         )
 
     }
@@ -81,10 +93,8 @@ class ProcessingCoordinator(
         private val processor: Processor,
         private val preProcessor: PreProcessor,
         private val mProcessingHandler: Handler,
-        private val dimensions: Size,
         private var inputAllocation: Allocation,
-        private var outputAllocation: Allocation,
-        private var preProcessedAllocation: Allocation
+        private var outputAllocation: Allocation
     ) : Runnable, Allocation.OnBufferAvailableListener {
         override fun run() {
             var pendingFrames: Int
