@@ -3,10 +3,7 @@ package uk.ac.plymouth.interiordesign.Processors
 import android.graphics.ImageFormat
 import android.os.Handler
 import android.os.HandlerThread
-import android.renderscript.Allocation
-import android.renderscript.Element
-import android.renderscript.RenderScript
-import android.renderscript.Type
+import android.renderscript.*
 import android.util.Size
 import android.view.Surface
 
@@ -73,12 +70,11 @@ class ProcessingCoordinator(
             inputAllocation,
             outputAllocation
         )
-
     }
 
     internal class ProcessingTask(
-        private val processor: Processor,
-        private val preProcessor: PreProcessor,
+        processor: Processor,
+        preProcessor: PreProcessor,
         private val mProcessingHandler: Handler,
         private var inputAllocation: Allocation,
         private var outputAllocation: Allocation
@@ -100,6 +96,9 @@ class ProcessingCoordinator(
             processor.run()
             outputAllocation.ioSend()
         }
+
+        var processor = processor
+        var preProcessor = preProcessor
 
         private var mPendingFrames = 0
         override fun onBufferAvailable(a: Allocation?) {
@@ -125,14 +124,15 @@ class ProcessingCoordinator(
 
     fun chooseProcessor(processorChoice: Int) {
         when (processorChoice) {
-            0 -> if (::processor.isInitialized && processor is SobelProcessor)
+            0 -> processor = DummyProcessor(rs, preProcessedAllocation, outputAllocation)
+            1 -> if (::processor.isInitialized && processor is SobelProcessor)
                     (processor as SobelProcessor).changeOperators(0)
                  else {
                   processor =
                         SobelProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
                     (processor as SobelProcessor).changeOperators(0)
                  }
-            1 -> {
+            2 -> {
                 if (processor is SobelProcessor)
                     (processor as SobelProcessor).changeOperators(1)
                 else {
@@ -142,11 +142,19 @@ class ProcessingCoordinator(
                 }
             }
         }
+        if (processingTask != null)
+            processingTask.processor = processor
     }
 
     fun choosePreProcessor(preProcessorChoice: Int) {
         when (preProcessorChoice) {
-            0 -> preProcessor = GaussianProcessor(
+            0 -> preProcessor = DummyPreprocessor(
+                rs,
+                inputAllocation,
+                preProcessedAllocation,
+                tempAllocation
+            )
+            1 -> preProcessor = GaussianProcessor(
                 rs,
                 dimensions,
                 inputAllocation,
@@ -156,6 +164,8 @@ class ProcessingCoordinator(
                 5
             )
         }
+        if (processingTask != null)
+            processingTask.preProcessor = preProcessor
     }
 
     fun closeAllocations() {

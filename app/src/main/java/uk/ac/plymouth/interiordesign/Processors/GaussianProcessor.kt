@@ -50,7 +50,6 @@ class GaussianProcessor(
         mGaussianScript._gMaskSize = gaussianCalculator.mMaskSize
         mGaussianScript.bind_gConvMask1d(mKernelAllocation)
         mGaussianScript.forEach_convolve_kernel_row(mTempAllocation)
-        // Run processing pass
         mGaussianScript._gCurrentFrame = mTempAllocation
         mGaussianScript.forEach_convolve_kernel_col(mOutputAllocation)
     }

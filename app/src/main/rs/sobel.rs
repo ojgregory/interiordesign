@@ -57,7 +57,6 @@ uchar4 __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
 
 
     int4 rgb;
-    newPixel -= 16;
     rgb.r = newPixel;
     rgb.g = newPixel;
     rgb.b = newPixel;
@@ -79,7 +78,6 @@ uchar4 __attribute__((kernel)) greyscale(uint32_t x, uint32_t y) {
     curPixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, x, y);
 
     int4 rgb;
-    curPixel -= 16;
     rgb.r = curPixel;
     rgb.g = curPixel;
     rgb.b = curPixel;

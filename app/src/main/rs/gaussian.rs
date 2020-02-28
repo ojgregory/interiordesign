@@ -31,13 +31,6 @@ uchar __attribute__((kernel)) convolve_kernel_row(uint32_t x, uint32_t y)
             }
         }
 
-        int4 rgb;
-        new_val -= 16;
-        rgb.r = new_val;
-        rgb.g = new_val;
-        rgb.b = new_val;
-        rgb.a = 255;
-
         // Write out merged HDR result
         return new_val;
 }

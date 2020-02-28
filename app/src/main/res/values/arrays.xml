@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="processors">
+        <item>None</item>
         <item>Sobel</item>
         <item>Scharr</item>
     </string-array>
