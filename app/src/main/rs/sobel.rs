@@ -9,16 +9,19 @@ int gImageH;
 
 // Host version of the convolution mask 2D array.
 const int maskSize = 3;
-static float convXMask[maskSize][maskSize] = {
-                                            { -1, 0, 1 },
-										    { -2, 0, 2 },
-										    { -1, 0, 1 }
-										};
-static float convYMask[maskSize][maskSize] = {
-                                            { -1, -2, -1 },
-										    { 0, 0, 0 },
-									        { 1, 2, 1 }
-									    };
+//static float convXMask[maskSize][maskSize] = {
+//                                            { -1, 0, 1 },
+//										    { -2, 0, 2 },
+//										    { -1, 0, 1 }
+//										};
+//static float convYMask[maskSize][maskSize] = {
+//                                            { -1, -2, -1 },
+//										    { 0, 0, 0 },
+//									        { 1, 2, 1 }
+//									    };
+
+int *convXMask;
+int *convYMask;
 
 ////
 // CUDA kernel to convolve an image using the convolution kernel
@@ -43,9 +46,9 @@ uchar4 __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
             pixelY = (y - (maskSize / 2)) + maskY;
             if (pixelX < gImageW && pixelY < gImageH) {
                 pixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY);
-                //rsDebug("pixel", pixel);
-                newValX = newValX + (float) (pixel * convXMask[maskX][maskY]);
-                newValY = newValY + (float) (pixel * convYMask[maskX][maskY]);
+                //rsDebug("pixel", convXMask[maskX * maskSize + maskY]);
+                newValX = newValX + (float) (pixel * convXMask[maskX * maskSize + maskY]);
+                newValY = newValY + (float) (pixel * convYMask[maskX * maskSize + maskY]);
             }
         }
     }

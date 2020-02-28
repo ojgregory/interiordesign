@@ -9,9 +9,9 @@ class GaussianCalculatorTest {
     @Test
     fun createGaussianKernel() {
         val gaussianCalculator = GaussianCalculator(1.0, 5)
-        val correctKernel = doubleArrayOf(0.06136, 0.24477, 0.38774, 0.24477, 0.06136)
+        val correctKernel = floatArrayOf(0.06136f, 0.24477f, 0.38774f, 0.24477f, 0.06136f)
         gaussianCalculator.createGaussianKernel()
-        for (i in 0 until 5) {
+        for (i in gaussianCalculator.kernel.indices) {
             kotlin.test.assertEquals(correctKernel[i], gaussianCalculator.kernel[i])
         }
     }
