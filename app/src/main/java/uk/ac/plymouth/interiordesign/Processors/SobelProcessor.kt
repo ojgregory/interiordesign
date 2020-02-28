@@ -1,17 +1,9 @@
 package uk.ac.plymouth.interiordesign.Processors
 
-import android.graphics.ImageFormat
-import android.media.Image
-import android.media.ImageReader
-import android.media.ImageWriter
-import android.os.Handler
-import android.os.HandlerThread
-import android.util.Size
-import android.view.Surface
 import android.renderscript.Allocation
 import android.renderscript.Element
 import android.renderscript.RenderScript
-import android.renderscript.Type
+import android.util.Size
 import uk.ac.plymouth.interiordesign.ScriptC_sobel
 
 
@@ -29,10 +21,11 @@ class SobelProcessor(
 
     init {
         mSobelScript = ScriptC_sobel(rs)
-        mOperatorAllocationX = Allocation.createSized(rs, Element.F32(rs), sobelOperatorProvider.maskSize * sobelOperatorProvider.maskSize)
+        sobelOperatorProvider.selectedOperator = 1
+        mOperatorAllocationX = Allocation.createSized(rs, Element.I32(rs), sobelOperatorProvider.maskSize * sobelOperatorProvider.maskSize)
         mOperatorAllocationX.copyFrom(sobelOperatorProvider.getOperatorX())
 
-        mOperatorAllocationY = Allocation.createSized(rs, Element.F32(rs), sobelOperatorProvider.maskSize * sobelOperatorProvider.maskSize)
+        mOperatorAllocationY = Allocation.createSized(rs, Element.I32(rs), sobelOperatorProvider.maskSize * sobelOperatorProvider.maskSize)
         mOperatorAllocationY.copyFrom(sobelOperatorProvider.getOperatorY())
     }
 
@@ -47,6 +40,8 @@ class SobelProcessor(
         mSobelScript._gCurrentFrame = mInputAllocation
         mSobelScript._gImageW = dimensions.width
         mSobelScript._gImageH = dimensions.height
+        mSobelScript.bind_convXMask(mOperatorAllocationX)
+        mSobelScript.bind_convYMask(mOperatorAllocationY)
         // Run processing pass
         mSobelScript.forEach_convolveKernel(mOutputAllocation)
     }
