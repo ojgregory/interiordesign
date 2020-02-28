@@ -5,7 +5,7 @@
         <item>Scharr</item>
     </string-array>
     <string-array name="preprocessors">
-        <item>Gaussian</item>
         <item>None</item>
+        <item>Gaussian</item>
     </string-array>
 </resources>
