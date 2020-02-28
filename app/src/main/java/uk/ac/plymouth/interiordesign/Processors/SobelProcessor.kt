@@ -21,7 +21,6 @@ class SobelProcessor(
 
     init {
         mSobelScript = ScriptC_sobel(rs)
-        sobelOperatorProvider.selectedOperator = 1
         mOperatorAllocationX = Allocation.createSized(rs, Element.I32(rs), sobelOperatorProvider.maskSize * sobelOperatorProvider.maskSize)
         mOperatorAllocationX.copyFrom(sobelOperatorProvider.getOperatorX())
 
@@ -31,6 +30,7 @@ class SobelProcessor(
 
     fun changeOperators(selectedOperator : Int) {
         sobelOperatorProvider.selectedOperator = selectedOperator
+        var operatorX = sobelOperatorProvider.getOperatorX()
         mOperatorAllocationX.copyFrom(sobelOperatorProvider.getOperatorX())
         mOperatorAllocationY.copyFrom(sobelOperatorProvider.getOperatorY())
     }

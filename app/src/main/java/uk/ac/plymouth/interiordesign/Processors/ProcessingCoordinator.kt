@@ -125,8 +125,22 @@ class ProcessingCoordinator(
 
     fun chooseProcessor(processorChoice: Int) {
         when (processorChoice) {
-            0 -> processor =
-                SobelProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
+            0 -> if (::processor.isInitialized && processor is SobelProcessor)
+                    (processor as SobelProcessor).changeOperators(0)
+                 else {
+                  processor =
+                        SobelProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
+                    (processor as SobelProcessor).changeOperators(0)
+                 }
+            1 -> {
+                if (processor is SobelProcessor)
+                    (processor as SobelProcessor).changeOperators(1)
+                else {
+                    processor =
+                        SobelProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
+                    (processor as SobelProcessor).changeOperators(1)
+                }
+            }
         }
     }
 
