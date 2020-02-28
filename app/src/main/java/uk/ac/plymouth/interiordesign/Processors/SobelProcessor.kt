@@ -22,10 +22,24 @@ class SobelProcessor(
 ) : Processor {
 
     private var mSobelScript: ScriptC_sobel
+    private var mOperatorAllocationX : Allocation
+    private var mOperatorAllocationY : Allocation
+    private val sobelOperatorProvider = SobelOperatorProvider()
 
 
     init {
         mSobelScript = ScriptC_sobel(rs)
+        mOperatorAllocationX = Allocation.createSized(rs, Element.F32(rs), sobelOperatorProvider.maskSize * sobelOperatorProvider.maskSize)
+        mOperatorAllocationX.copyFrom(sobelOperatorProvider.getOperatorX())
+
+        mOperatorAllocationY = Allocation.createSized(rs, Element.F32(rs), sobelOperatorProvider.maskSize * sobelOperatorProvider.maskSize)
+        mOperatorAllocationY.copyFrom(sobelOperatorProvider.getOperatorY())
+    }
+
+    fun changeOperators(selectedOperator : Int) {
+        sobelOperatorProvider.selectedOperator = selectedOperator
+        mOperatorAllocationX.copyFrom(sobelOperatorProvider.getOperatorX())
+        mOperatorAllocationY.copyFrom(sobelOperatorProvider.getOperatorY())
     }
 
 
