@@ -4,7 +4,7 @@
 
 float sigmaRange;
 float sigmaSpatial;
-float diameter;
+int diameter;
 int gImageW;
 int gImageH;
 
@@ -18,7 +18,7 @@ static float gaussian(float x, double sigma) {
     return exp(-(native_powr((float) x, 2.0f)))/(2 * native_powr((float) sigma, 2.0f)) / (2 * M_PI * native_powr((float) sigma, 2.0f));
 }
 
-uchar4 __attribute__((kernel)) applyBilateralFilter(uint32_t x, uint32_t y) {
+uchar __attribute__((kernel)) applyBilateralFilter(uint32_t x, uint32_t y) {
     uchar newPixel;
     uchar currentPixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, x, y);
 
@@ -48,12 +48,5 @@ uchar4 __attribute__((kernel)) applyBilateralFilter(uint32_t x, uint32_t y) {
 
     newPixel = newVal / wp;
 
-    int4 rgb;
-    rgb.r = newPixel;
-    rgb.g = newPixel;
-    rgb.b = newPixel;
-    rgb.a = 255;
-
-    // Write out merged HDR result
-    return convert_uchar4(clamp(rgb, 0, 255));
+    return newPixel;
 }

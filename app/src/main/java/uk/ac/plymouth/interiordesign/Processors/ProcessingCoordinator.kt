@@ -163,6 +163,16 @@ class ProcessingCoordinator(
                 10.0,
                 5
             )
+            2 -> preProcessor = BilateralFilterProcessor(
+                rs,
+                dimensions,
+                inputAllocation,
+                preProcessedAllocation,
+                tempAllocation,
+                12.0f,
+                16.0f,
+                5
+            )
         }
         if (processingTask != null)
             processingTask.preProcessor = preProcessor

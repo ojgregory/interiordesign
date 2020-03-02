@@ -8,5 +8,6 @@
     <string-array name="preprocessors">
         <item>None</item>
         <item>Gaussian</item>
+        <item>Bilateral</item>
     </string-array>
 </resources>
