@@ -27,24 +27,28 @@ float __attribute__((kernel)) generateKValues(int x){
         return minval + x * (maxval - minval) / (ncomps - 1);
 }
 
-void __attribute__((kernel)) generateKIndex(rs_allocation kindex, int x){
+void generateKIndex(){
     float fval2;
-    for (int k = 0; k < ncomps - 1; k++) {
+    int i, k;
+    for (i = minval, k = 0; i <= maxval && k < ncomps - 1; k++) {
         fval2 = nc[k + 1];
-        while (x < fval2) {
-            rsSetElementAt_int(kindex, k, x);
+        while (i < fval2 && i < 255) {
+            kindex[i] = k;
+            i++;
         }
     }
 }
 
-void __attribute__((kernel)) generateKFract(rs_allocation kfract, int x){
+void generateKFract(){
     float fval1;
     float fval2;
-    for (int k = 0; k < ncomps - 1; k++) {
+    int i, k;
+    for (i = minval, k = 0; i <= maxval && k < ncomps - 1; k++) {
             fval1 = nc[k];
             fval2 = nc[k + 1];
-            while (x < fval2) {
-                rsSetElementAt_int(kfract, (float)(x - fval1) / (float)(fval2 - fval1), x);
+            while (i < fval2 && i < 255) {
+                kfract[i] = (float)(i - fval1) / (float)(fval2 - fval1);
+                i++;
             }
         }
 

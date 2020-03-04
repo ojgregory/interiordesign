@@ -171,7 +171,10 @@ class ProcessingCoordinator(
                 tempAllocation,
                 12.0f,
                 16.0f,
-                5
+                5,
+                4,
+                10.0f,
+                50.0f
             )
         }
         if (processingTask != null)
