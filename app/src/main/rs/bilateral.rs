@@ -64,6 +64,62 @@ float __attribute__((kernel)) calculateRangeKernel(int x) {
         return native_exp(-(float)(x * x) / denom);
 }
 
+int __attribute__((kernel)) horizontalConvolution(int x, int y, int z) {
+    if (z < ncomps) {
+        int width = (int)(2.0 * spatial_stdev);
+        float sum = 0.0f;
+        float norm = 0.0f;
+        float kval = nc[z];
+        float kern;
+        uchar nval;
+        int pixelX;
+        int rangeAccess;
+        int spatialAccess;
+        for (int k = 0; k <= width; k++) {
+            pixelX = (x - (width / 2)) + k;
+            if (pixelX < gImageW) {
+                nval = rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, y);
+                spatialAccess = abs(k);
+                rangeAccess = abs((int) (kval - nval));
+                if (rangeAccess < 256 && spatialAccess < spatial_size) {
+                    kern = spatial[spatialAccess] * range[rangeAccess];
+                    sum += kern * nval;
+                    norm += kern;
+                }
+            }
+        }
+        return (int)((sum / norm) + 0.5);
+    }
+}
+
+int __attribute__((kernel)) verticalConvolution(int x, int y, int z) {
+    if (z < ncomps) {
+        int width = (int)(2.0 * spatial_stdev);
+        float sum = 0.0f;
+        float norm = 0.0f;
+        float kval = nc[z];
+        float kern;
+        uchar nval;
+        int rangeAccess;
+        int spatialAccess;
+        int pixelY;
+        for (int k = 0; k <= width; k++) {
+            pixelY = (y - (width / 2)) + k;
+            if (pixelY < gImageH) {
+                nval = rsGetElementAtYuv_uchar_Y(gCurrentFrame, x, pixelY);
+                spatialAccess = abs(k);
+                rangeAccess = abs((int) (kval - nval));
+                if (rangeAccess < 256 && spatialAccess < spatial_size) {
+                    kern = spatial[spatialAccess] * range[rangeAccess];
+                    sum += kern * nval;
+                    norm += kern;
+                }
+            }
+        }
+        return (int)((sum / norm) + 0.5);
+    }
+}
+
 static float spatial_distance(int x, int y, int i, int j) {
     return sqrt(native_powr((float) x - i, 2.0f) + native_powr((float) y - j, 2.0f));
 }

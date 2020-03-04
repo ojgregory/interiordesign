@@ -3,6 +3,7 @@ package uk.ac.plymouth.interiordesign.Processors
 import android.renderscript.Allocation
 import android.renderscript.Element
 import android.renderscript.RenderScript
+import android.renderscript.Type
 import android.util.Size
 import uk.ac.plymouth.interiordesign.ScriptC_bilateral
 import kotlin.math.roundToInt
@@ -26,6 +27,9 @@ class BilateralFilterProcessor(
     private var mSpatialAllocation : Allocation
     private var mRangeAllocation : Allocation
     private var mNCAllocation : Allocation
+    private var mPBCAllocation : Allocation
+    private var mPBCTempAllocation : Allocation
+    private val spatialSize = (2 * spacial_stdev + 1).roundToInt();
 
     private var sigmaRange = sigmaRange
         get() = field
@@ -51,7 +55,7 @@ class BilateralFilterProcessor(
         mKIndexAllocation = Allocation.createSized(rs, Element.F32(rs), 256)
         mKFractAllocation = Allocation.createSized(rs, Element.F32(rs), 256)
         mRangeAllocation = Allocation.createSized(rs, Element.F32(rs), 256)
-        val spatialSize = (2 * spacial_stdev + 1).roundToInt();
+
         mSpatialAllocation = Allocation.createSized(rs, Element.F32(rs), spatialSize)
 
         mBilateralScript._spatial_size = spatialSize
@@ -71,9 +75,30 @@ class BilateralFilterProcessor(
         mBilateralScript.forEach_calculateRangeKernel(mRangeAllocation)
         mBilateralScript._denom = (2.0 * spacial_stdev * spacial_stdev).toFloat()
         mBilateralScript.forEach_calculateSpatialKernel(mSpatialAllocation)
+
+        mPBCAllocation = Allocation.createTyped(rs, Type.createXYZ(rs, Element.I32(rs), dimensions.width, dimensions.height, ncomps))
+        mPBCTempAllocation = Allocation.createTyped(rs, Type.createXYZ(rs, Element.I32(rs), dimensions.width, dimensions.height, ncomps))
     }
 
     override fun run() {
+        mBilateralScript._spatial_size = spatialSize
+        mBilateralScript._spatial_stdev = spacial_stdev
+        mBilateralScript._range_stdev = range_stdev
+        mBilateralScript._maxval = 255
+        mBilateralScript._minval = 0
+        mBilateralScript._ncomps = ncomps
+        mBilateralScript.bind_kfract(mKFractAllocation)
+        mBilateralScript.bind_kindex(mKIndexAllocation)
+        mBilateralScript.bind_nc(mNCAllocation)
+        mBilateralScript.bind_range(mRangeAllocation)
+        mBilateralScript.bind_spatial(mSpatialAllocation)
+        mBilateralScript._gCurrentFrame = mInputAllocation
+
+        mBilateralScript.forEach_horizontalConvolution(mPBCTempAllocation)
+        mBilateralScript.forEach_verticalConvolution(mPBCAllocation)
+    }
+
+    fun runOld() {
         mBilateralScript._gCurrentFrame = mInputAllocation
         mBilateralScript._gImageW = dimensions.width
         mBilateralScript._gImageH = dimensions.height
