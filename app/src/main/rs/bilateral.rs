@@ -7,8 +7,58 @@ float sigmaSpatial;
 int diameter;
 int gImageW;
 int gImageH;
+float *nc;
+float *kindex;
+float *kfract;
+float *spatial;
+float *range;
+int minval;
+int maxval;
+int ncomps;
+int spatial_size;
+float spatial_stdev;
+float range_stdev;
+float denom;
 
 rs_allocation gCurrentFrame;
+
+float __attribute__((kernel)) generateKValues(int x){
+    if (x < ncomps)
+        return minval + x * (maxval - minval) / (ncomps - 1);
+}
+
+void __attribute__((kernel)) generateKIndex(rs_allocation kindex, int x){
+    float fval2;
+    for (int k = 0; k < ncomps - 1; k++) {
+        fval2 = nc[k + 1];
+        while (x < fval2) {
+            rsSetElementAt_int(kindex, k, x);
+        }
+    }
+}
+
+void __attribute__((kernel)) generateKFract(rs_allocation kfract, int x){
+    float fval1;
+    float fval2;
+    for (int k = 0; k < ncomps - 1; k++) {
+            fval1 = nc[k];
+            fval2 = nc[k + 1];
+            while (x < fval2) {
+                rsSetElementAt_int(kfract, (float)(x - fval1) / (float)(fval2 - fval1), x);
+            }
+        }
+
+}
+
+float __attribute__((kernel)) calculateSpatialKernel(int x) {
+    if (x < spatial_size)
+        return native_exp(-(float)(x * x) / denom);
+}
+
+float __attribute__((kernel)) calculateRangeKernel(int x) {
+    if (x < spatial_size)
+        return native_exp(-(float)(x * x) / denom);
+}
 
 static float spatial_distance(int x, int y, int i, int j) {
     return sqrt(native_powr((float) x - i, 2.0f) + native_powr((float) y - j, 2.0f));
