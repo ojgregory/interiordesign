@@ -146,6 +146,11 @@ class ProcessingCoordinator(
                     processor =
                         RobertsCrossProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
             }
+            4 -> {
+                if (!(processor is PrewittProcessor))
+                    processor =
+                        PrewittProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
+            }
         }
         if (processingTask != null)
             processingTask.processor = processor
