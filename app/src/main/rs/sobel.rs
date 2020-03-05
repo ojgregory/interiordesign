@@ -8,7 +8,7 @@ int gImageW;
 int gImageH;
 
 // Host version of the convolution mask 2D array.
-const int maskSize = 3;
+int maskSize;
 //static float convXMask[maskSize][maskSize] = {
 //                                            { -1, 0, 1 },
 //										    { -2, 0, 2 },

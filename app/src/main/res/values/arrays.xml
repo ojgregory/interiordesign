@@ -4,6 +4,7 @@
         <item>None</item>
         <item>Sobel</item>
         <item>Scharr</item>
+        <item>Roberts Cross</item>
     </string-array>
     <string-array name="preprocessors">
         <item>None</item>

@@ -40,6 +40,7 @@ class SobelProcessor(
         mSobelScript._gCurrentFrame = mInputAllocation
         mSobelScript._gImageW = dimensions.width
         mSobelScript._gImageH = dimensions.height
+        mSobelScript._maskSize = sobelOperatorProvider.maskSize
         mSobelScript.bind_convXMask(mOperatorAllocationX)
         mSobelScript.bind_convYMask(mOperatorAllocationY)
         // Run processing pass

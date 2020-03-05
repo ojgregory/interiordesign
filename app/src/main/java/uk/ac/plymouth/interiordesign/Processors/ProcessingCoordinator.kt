@@ -141,6 +141,11 @@ class ProcessingCoordinator(
                     (processor as SobelProcessor).changeOperators(1)
                 }
             }
+            3 -> {
+                if (!(processor is RobertsCrossProcessor))
+                    processor =
+                        RobertsCrossProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
+            }
         }
         if (processingTask != null)
             processingTask.processor = processor
