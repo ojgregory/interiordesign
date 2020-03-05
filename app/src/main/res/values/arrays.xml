@@ -5,6 +5,7 @@
         <item>Sobel</item>
         <item>Scharr</item>
         <item>Roberts Cross</item>
+        <item>Prewitt Operator</item>
     </string-array>
     <string-array name="preprocessors">
         <item>None</item>
