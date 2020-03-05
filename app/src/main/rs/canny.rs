@@ -68,6 +68,7 @@ float2 __attribute__((kernel)) supression(uint32_t x, uint32_t y) {
   float yTop[2];
   float x_est;
 
+  if(x > 1 && y > 1 && x < gImageW - 2 && y < gImageH - 2){
   if ((theta >= 0 && theta <= 45) || (theta < -135 && theta >= -180)) {
     yBot[0] = rsGetElementAt_float2(input, x, y + 1).x;
     yBot[1] = rsGetElementAt_float2(input, x + 1, y + 1).x;
@@ -129,6 +130,10 @@ float2 __attribute__((kernel)) supression(uint32_t x, uint32_t y) {
       outputPixel.y = theta;
     }
   }
+  } else {
+    outputPixel.x = pixel;
+    outputPixel.y = theta;
+  }
 
   return outputPixel;
 }
@@ -159,33 +164,34 @@ uchar4 __attribute__((kernel)) hystersis(uint32_t x, uint32_t y) {
   pixel = inputPixel.x;
   theta = inputPixel.y;
   uchar4 outputPixel;
-  outputPixel.a = 255;
 
   if (pixel == 0)
     return (uchar4){0, 0, 0, 255};
   else if (pixel == 255)
     return (uchar4){255, 255, 255, 255};
   else if (pixel == 128) {
-    if (fabs(rsGetElementAt_float2(input, x - 1, y - 1).x - pixel) ==
+  if(x > 1 && y > 1 && x < gImageW - 2 && y < gImageH - 2){
+    if (fabs(rsGetElementAt_float2(input, x - 1, y - 1).x) ==
         255) {
       return (uchar4){255, 255, 255, 255};
-    } else if (fabs(rsGetElementAt_float2(input, x, y - 1).x - pixel) == 255) {
+    } else if (fabs(rsGetElementAt_float2(input, x, y - 1).x) == 255) {
       return (uchar4){255, 255, 255, 255};
-    } else if (fabs(rsGetElementAt_float2(input, x + 1, y - 1).x -
-                    pixel) == 255) {
+    } else if (fabs(rsGetElementAt_float2(input, x + 1, y - 1).x) == 255) {
       return (uchar4){255, 255, 255, 255};
-    } else if (fabs(rsGetElementAt_float2(input, x - 1, y).x - pixel) == 255) {
+    } else if (fabs(rsGetElementAt_float2(input, x - 1, y).x) == 255) {
       return (uchar4){255, 255, 255, 255};
-    } else if (fabs(rsGetElementAt_float2(input, x + 1, y).x - pixel) == 255) {
+    } else if (fabs(rsGetElementAt_float2(input, x + 1, y).x) == 255) {
       return (uchar4){255, 255, 255, 255};
-    } else if (fabs(rsGetElementAt_float2(input, x - 1, y + 1).x -
-                    pixel) == 255) {
+    } else if (fabs(rsGetElementAt_float2(input, x - 1, y + 1).x) == 255) {
       return (uchar4){255, 255, 255, 255};
-    } else if (fabs(rsGetElementAt_float2(input, x, y + 1).x - pixel) == 255) {
+    } else if (fabs(rsGetElementAt_float2(input, x, y + 1).x) == 255) {
       return (uchar4){255, 255, 255, 255};
-    } else if (fabs(rsGetElementAt_float2(input, x + 1, y + 1).x -
-                    pixel) == 255) {
+    } else if (fabs(rsGetElementAt_float2(input, x + 1, y + 1).x) == 255) {
       return (uchar4){255, 255, 255, 255};
+    }
+    }
+    else {
+        return (uchar4) {255,255,255,255};
     }
   }
 
