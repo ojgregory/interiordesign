@@ -39,8 +39,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
 
     private fun previewSession() {
-        val MAX_WIDTH = 1280;
-        val TARGET_ASPECT = 16.0f / 9.0f;
+        val MAX_WIDTH = 1280
+        val TARGET_ASPECT = textureview.width / textureview.height
         val ASPECT_TOLERANCE = 0.1f;
         val surfaceTexture = textureview.surfaceTexture
         val surface = Surface(surfaceTexture)
@@ -70,7 +70,10 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 outputAspect = candidateAspect
             }
         }
-        Log.i(TAG, "Resolution chosen: $outputSize")
+        // Switch width and height for portrait
+        val size:Size = Size(outputSize.height, outputSize.width)
+        Log.i(TAG, "Resolution chosen: $size")
+
         textureview.rotation = 90.0f
 
         // Configure processing
@@ -79,7 +82,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             0,
             0,
             mRS,
-            outputSize
+            size
         )
         processingCoordinator.setOutputSurface(surface)
 
