@@ -13,7 +13,7 @@ import uk.ac.plymouth.interiordesign.ScriptC_gaussian
 
 
 class GaussianProcessor(
-    rs: RenderScript, private val dimensions: Size,
+    private var rs: RenderScript, private val dimensions: Size,
     override var mInputAllocation: Allocation,
     override var mOutputAllocation: Allocation,
     override var mTempAllocation: Allocation,
@@ -22,19 +22,25 @@ class GaussianProcessor(
 ) : PreProcessor {
     private var mKernelAllocation: Allocation
     private var gaussianCalculator: GaussianCalculator = GaussianCalculator(sigma, maskSize)
-    private var sigma = sigma
+    var sigma = sigma
         get() = field
         set(value) {
             field = value
             gaussianCalculator.mSigma = sigma
         }
-    private var maskSize = maskSize
+    var maskSize = maskSize
         get() = field
         set(value) {
             field = value
             gaussianCalculator.mMaskSize = maskSize
         }
     private var mGaussianScript: ScriptC_gaussian = ScriptC_gaussian(rs)
+
+    fun recalculateGaussianKernel() {
+        gaussianCalculator.createGaussianKernel()
+        mKernelAllocation = Allocation.createSized(rs, Element.F32(rs), maskSize)
+        mKernelAllocation.copyFrom(gaussianCalculator.kernel)
+    }
 
     init {
 

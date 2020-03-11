@@ -10,7 +10,7 @@
     <TextureView
         android:id="@+id/textureview"
         android:layout_width="wrap_content"
-        android:layout_height="707dp"
+        android:layout_height="600dp"
         app:layout_constraintBottom_toTopOf="@id/processorSpinner"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -32,5 +32,13 @@
         app:layout_constraintBottom_toTopOf="@id/textureview"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textureview" />
+
+    <Spinner
+        android:id="@+id/gaussianSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:entries="@array/maskSizes"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/processorSpinner"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

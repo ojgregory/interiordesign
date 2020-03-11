@@ -264,6 +264,19 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
     }
 
+    private val gaussianSpinnerListener = object : AdapterView.OnItemSelectedListener {
+        override fun onNothingSelected(parent: AdapterView<*>?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            when(position) {
+                0 -> processingCoordinator.setGaussianMaskSize(3)
+                1 -> processingCoordinator.setGaussianMaskSize(5)
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         if (textureview.isAvailable)
@@ -311,6 +324,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         preprocesserSpinner.onItemSelectedListener = preProcessorSpinnerListener
         processorSpinner.onItemSelectedListener = processorSpinnerListener
+        gaussianSpinner.onItemSelectedListener = gaussianSpinnerListener
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
