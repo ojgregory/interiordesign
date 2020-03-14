@@ -35,7 +35,6 @@ class GaussianCalculator(sigma : Double, maskSize: Int) {
 
         for (i in 0 until mMaskSize) {
             kernel[i] = (kernel[i] / acc).toFloat()
-            kernel[i] = (Math.round(kernel[i] * 100000.0) / 100000.0).toFloat()
         }
 
     }

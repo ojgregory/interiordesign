@@ -13,6 +13,7 @@ import android.util.Log
 import android.util.Size
 import android.view.*
 import android.widget.AdapterView
+import android.widget.Button
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
@@ -39,8 +40,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
 
     private fun previewSession() {
-        val MAX_WIDTH = 1280;
-        val TARGET_ASPECT = 16.0f / 9.0f;
+        val MAX_WIDTH = 1280
+        val TARGET_ASPECT = textureview.width / textureview.height
         val ASPECT_TOLERANCE = 0.1f;
         val surfaceTexture = textureview.surfaceTexture
         val surface = Surface(surfaceTexture)
@@ -70,7 +71,10 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 outputAspect = candidateAspect
             }
         }
-        Log.i(TAG, "Resolution chosen: $outputSize")
+        // Switch width and height for portrait
+        val size:Size = Size(outputSize.height, outputSize.width)
+        Log.i(TAG, "Resolution chosen: $size")
+
         textureview.rotation = 90.0f
 
         // Configure processing
@@ -79,7 +83,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             0,
             0,
             mRS,
-            outputSize
+            size
         )
         processingCoordinator.setOutputSurface(surface)
 
@@ -261,6 +265,26 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
     }
 
+    private val gaussianSpinnerListener = object : AdapterView.OnItemSelectedListener {
+        override fun onNothingSelected(parent: AdapterView<*>?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            when(position) {
+                0 -> processingCoordinator.setGaussianMaskSize(3)
+                1 -> processingCoordinator.setGaussianMaskSize(5)
+            }
+        }
+    }
+
+    private val gaussianButtonListener = object : View.OnClickListener {
+        override fun onClick(v: View?) {
+            processingCoordinator.setGaussianSigma(gaussianSigmaEditText.text.toString().toDouble())
+        }
+
+    }
+
     override fun onResume() {
         super.onResume()
         if (textureview.isAvailable)
@@ -308,6 +332,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         preprocesserSpinner.onItemSelectedListener = preProcessorSpinnerListener
         processorSpinner.onItemSelectedListener = processorSpinnerListener
+        gaussianSpinner.onItemSelectedListener = gaussianSpinnerListener
+        gaussianButton.setOnClickListener(gaussianButtonListener)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

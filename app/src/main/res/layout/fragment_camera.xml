@@ -10,7 +10,7 @@
     <TextureView
         android:id="@+id/textureview"
         android:layout_width="wrap_content"
-        android:layout_height="707dp"
+        android:layout_height="600dp"
         app:layout_constraintBottom_toTopOf="@id/processorSpinner"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -20,17 +20,48 @@
         android:id="@+id/preprocesserSpinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:entries="@array/preprocessors"
+        android:spinnerMode="dialog"
         app:layout_constraintStart_toEndOf="@id/processorSpinner"
-        app:layout_constraintTop_toBottomOf="@id/textureview"
-        android:entries="@array/preprocessors" />
+        app:layout_constraintTop_toBottomOf="@id/textureview" />
 
     <Spinner
         android:id="@+id/processorSpinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:entries="@array/processors"
+        android:spinnerMode="dialog"
         app:layout_constraintBottom_toTopOf="@id/textureview"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textureview" />
+
+    <Spinner
+        android:id="@+id/gaussianSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:entries="@array/maskSizes"
+        android:spinnerMode="dialog"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/processorSpinner" />
+
+    <EditText
+        android:id="@+id/gaussianSigmaEditText"
+        android:layout_width="90dp"
+        android:layout_height="wrap_content"
+        android:entries="@array/maskSizes"
+        android:inputType="number|numberDecimal"
+        android:text="10.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/gaussianSpinner"
+        tools:text="10.0" />
+
+    <Button
+        android:id="@+id/gaussianButton"
+        android:layout_width="113dp"
+        android:layout_height="69dp"
+        android:text="@string/GaussianButton"
+        app:layout_constraintStart_toEndOf="@id/gaussianSigmaEditText"
+        app:layout_constraintTop_toBottomOf="@id/processorSpinner"
+        tools:text="@string/GaussianButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

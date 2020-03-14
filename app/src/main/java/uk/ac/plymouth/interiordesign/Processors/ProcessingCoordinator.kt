@@ -178,6 +178,20 @@ class ProcessingCoordinator(
             processingTask.preProcessor = preProcessor
     }
 
+    fun setGaussianMaskSize(size : Int) {
+        if (preProcessor is GaussianProcessor) {
+            (preProcessor as GaussianProcessor).maskSize = size
+            (preProcessor as GaussianProcessor).recalculateGaussianKernel()
+        }
+    }
+
+    fun setGaussianSigma(sigma : Double) {
+        if (preProcessor is GaussianProcessor) {
+            (preProcessor as GaussianProcessor).sigma = sigma
+            (preProcessor as GaussianProcessor).recalculateGaussianKernel()
+        }
+    }
+
     fun closeAllocations() {
         inputAllocation.destroy()
         outputAllocation.destroy()
