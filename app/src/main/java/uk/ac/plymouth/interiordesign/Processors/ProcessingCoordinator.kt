@@ -185,6 +185,13 @@ class ProcessingCoordinator(
         }
     }
 
+    fun setGaussianSigma(sigma : Double) {
+        if (preProcessor is GaussianProcessor) {
+            (preProcessor as GaussianProcessor).sigma = sigma
+            (preProcessor as GaussianProcessor).recalculateGaussianKernel()
+        }
+    }
+
     fun closeAllocations() {
         inputAllocation.destroy()
         outputAllocation.destroy()

@@ -13,6 +13,7 @@ import android.util.Log
 import android.util.Size
 import android.view.*
 import android.widget.AdapterView
+import android.widget.Button
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
@@ -277,6 +278,13 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
     }
 
+    private val gaussianButtonListener = object : View.OnClickListener {
+        override fun onClick(v: View?) {
+            processingCoordinator.setGaussianSigma(gaussianSigmaEditText.text.toString().toDouble())
+        }
+
+    }
+
     override fun onResume() {
         super.onResume()
         if (textureview.isAvailable)
@@ -325,6 +333,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         preprocesserSpinner.onItemSelectedListener = preProcessorSpinnerListener
         processorSpinner.onItemSelectedListener = processorSpinnerListener
         gaussianSpinner.onItemSelectedListener = gaussianSpinnerListener
+        gaussianButton.setOnClickListener(gaussianButtonListener)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
