@@ -12,4 +12,8 @@
         <item>None</item>
         <item>Gaussian</item>
     </string-array>
+    <string-array name="maskSizes" >
+        <item>3x3</item>
+        <item>5x5</item>
+    </string-array>
 </resources>

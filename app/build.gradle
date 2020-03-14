@@ -5,20 +5,6 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    signingConfigs {
-        debug {
-            storeFile file('/home/oliver/keystores/keystore.jks')
-            storePassword 'Alfhar_99'
-            keyAlias = 'Signing Key'
-            keyPassword 'Portal_100'
-        }
-        release {
-            storeFile file('/home/oliver/keystores/keystore.jks')
-            storePassword 'Alfhar_99'
-            keyAlias = 'Signing Key'
-            keyPassword 'Portal_100'
-        }
-    }
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
     defaultConfig {
@@ -33,10 +19,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
-        }
-        debug {
-            signingConfig signingConfigs.debug
         }
     }
 }

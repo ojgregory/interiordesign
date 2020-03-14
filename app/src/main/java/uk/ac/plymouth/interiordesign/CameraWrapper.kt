@@ -15,6 +15,9 @@
  */
 package uk.ac.plymouth.interiordesign
 
+import android.app.Activity
+import android.hardware.Camera
+import android.hardware.Camera.CameraInfo
 import android.hardware.camera2.*
 import android.hardware.camera2.CameraCaptureSession.CaptureCallback
 import android.os.ConditionVariable
@@ -23,6 +26,7 @@ import android.os.HandlerThread
 import android.util.Log
 import android.view.Surface
 import androidx.annotation.NonNull
+
 
 class CameraWrapper(manager: CameraManager, errorDisplayer: ErrorDisplayer,
                     readyListener: CameraReadyListener, readyHandler: Handler) {
