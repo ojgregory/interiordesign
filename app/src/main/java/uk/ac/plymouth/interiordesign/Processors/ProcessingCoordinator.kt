@@ -151,6 +151,11 @@ class ProcessingCoordinator(
                     processor =
                         PrewittProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
             }
+            5 -> {
+                if (!(processor is CannyProcessor))
+                    processor =
+                        CannyProcessor(rs, dimensions, preProcessedAllocation, outputAllocation, 21, 10)
+            }
         }
         if (processingTask != null)
             processingTask.processor = processor
