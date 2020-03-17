@@ -41,7 +41,6 @@ class CannyProcessor(
 
     fun changeOperators(selectedOperator : Int) {
         sobelOperatorProvider.selectedOperator = selectedOperator
-        var operatorX = sobelOperatorProvider.getOperatorX()
         mOperatorAllocationX.copyFrom(sobelOperatorProvider.getOperatorX())
         mOperatorAllocationY.copyFrom(sobelOperatorProvider.getOperatorY())
     }
