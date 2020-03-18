@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.renderscript.RenderScript
+import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
 import android.view.*
@@ -38,9 +39,13 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
 
     private fun previewSession() {
+        val displayMetrics = DisplayMetrics()
+        activity?.getWindowManager()?.getDefaultDisplay()?.getMetrics(displayMetrics)
+        val height = displayMetrics.heightPixels
+        val width = displayMetrics.widthPixels
         val MAX_WIDTH = 1280
-        val TARGET_ASPECT = 16.0f / 9.0f
-        val ASPECT_TOLERANCE = 0.1f;
+        val TARGET_ASPECT = height / width
+        val ASPECT_TOLERANCE = 0.1f
 
         // Initialize an image reader which will be used to apply filter to preview
         val outputSizes: Array<Size> = cameraCharacteristics(
@@ -308,10 +313,6 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
     override fun onResume() {
         super.onResume()
-        activity?.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
     }
 
     override fun onPause() {
