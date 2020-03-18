@@ -9,20 +9,18 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.renderscript.RenderScript
+import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
 import android.view.*
 import android.widget.AdapterView
-import android.widget.Button
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 import uk.ac.plymouth.interiordesign.CameraWrapper
-import uk.ac.plymouth.interiordesign.Processors.GaussianProcessor
 import uk.ac.plymouth.interiordesign.Processors.ProcessingCoordinator
 import uk.ac.plymouth.interiordesign.R
-import uk.ac.plymouth.interiordesign.Processors.SobelProcessor
 
 
 class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.CameraReadyListener {
@@ -30,6 +28,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
     private lateinit var mRS: RenderScript
     private lateinit var mUiHandler: Handler
     private lateinit var mPreviewRequest: CaptureRequest
+    private lateinit var mPreviewSurface: Surface
 
     private var cameraWrapper: CameraWrapper? = null
 
@@ -40,11 +39,13 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
 
     private fun previewSession() {
+        val displayMetrics = DisplayMetrics()
+        activity?.getWindowManager()?.getDefaultDisplay()?.getMetrics(displayMetrics)
+        val height = displayMetrics.heightPixels
+        val width = displayMetrics.widthPixels
         val MAX_WIDTH = 1280
-        val TARGET_ASPECT = textureview.width / textureview.height
-        val ASPECT_TOLERANCE = 0.1f;
-        val surfaceTexture = textureview.surfaceTexture
-        val surface = Surface(surfaceTexture)
+        var TARGET_ASPECT : Float = width.toFloat() / height
+        val ASPECT_TOLERANCE = 0.1f
 
         // Initialize an image reader which will be used to apply filter to preview
         val outputSizes: Array<Size> = cameraCharacteristics(
@@ -54,28 +55,41 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             .getOutputSizes(ImageFormat.YUV_420_888)
 
         var outputSize: Size = outputSizes.last()
-        var outputAspect =
-            outputSize.width / outputSize.height
+        var outputAspect : Float =
+            (outputSize.width / outputSize.height).toFloat()
         for (candidateSize in outputSizes) {
             if (candidateSize.width > MAX_WIDTH) continue
-            val candidateAspect =
-                candidateSize.width / candidateSize.height
+            val candidateAspect : Float =
+                candidateSize.width.toFloat() / candidateSize.height
             val goodCandidateAspect: Boolean =
                 Math.abs(candidateAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
             val goodOutputAspect: Boolean =
                 Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
-            if (goodCandidateAspect && !goodOutputAspect ||
-                candidateSize.width > outputSize.width
-            ) {
+            if ((goodCandidateAspect && !goodOutputAspect) || (candidateSize.width > outputSize.width)) {
                 outputSize = candidateSize
                 outputAspect = candidateAspect
             }
         }
-        // Switch width and height for portrait
-        val size:Size = Size(outputSize.height, outputSize.width)
-        Log.i(TAG, "Resolution chosen: $size")
 
-        textureview.rotation = 90.0f
+        if (!(Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE))
+            TARGET_ASPECT = 16.0f/9.0f
+
+        for (candidateSize in outputSizes) {
+            //if (candidateSize.height > MAX_HEIGHT) continue
+            val candidateAspect : Float =
+                candidateSize.width.toFloat() / candidateSize.height
+            val goodCandidateAspect: Boolean =
+                Math.abs(candidateAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
+            val goodOutputAspect: Boolean =
+                Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
+            if ((goodCandidateAspect && !goodOutputAspect) || (candidateSize.width > outputSize.width)) {
+                outputSize = candidateSize
+                outputAspect = candidateAspect
+            }
+        }
+
+        // Switch width and height for portrait
+        Log.i(TAG, "Resolution chosen: $outputSize")
 
         // Configure processing
         // Configure processing
@@ -83,9 +97,19 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             0,
             0,
             mRS,
-            size
+            outputSize
         )
-        processingCoordinator.setOutputSurface(surface)
+        setupProcessor()
+
+
+        // Configure the output view - this will fire surfaceChanged
+        previewSurfaceView.setAspectRatio(outputAspect)
+        previewSurfaceView.getHolder().setFixedSize(outputSize.width, outputSize.height)
+    }
+
+    private fun setupProcessor() {
+        if (!(::processingCoordinator.isInitialized) || !(::mPreviewSurface.isInitialized)) return
+        processingCoordinator.setOutputSurface(mPreviewSurface)
 
         // Creates list of Surfaces where the camera will output frames
         val targets = listOf(processingCoordinator.getInputSurface())
@@ -106,6 +130,21 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
         override fun onSurfaceTextureAvailable(surface: SurfaceTexture?, width: Int, height: Int) {
             Log.d(TAG, "textureSurface width: $width height: $height")
+        }
+
+    }
+
+    private val surfaceHolderCallback = object : SurfaceHolder.Callback {
+        override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
+            mPreviewSurface = holder!!.surface
+            setupProcessor()
+        }
+
+        override fun surfaceDestroyed(holder: SurfaceHolder?) {
+            mPreviewSurface.release()
+        }
+
+        override fun surfaceCreated(holder: SurfaceHolder?) {
             openCamera()
         }
 
@@ -251,7 +290,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-            processingCoordinator.chooseProcessor(position)
+            if (::processingCoordinator.isInitialized)
+                processingCoordinator.chooseProcessor(position)
         }
     }
 
@@ -261,7 +301,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-            processingCoordinator.choosePreProcessor(position)
+            if (::processingCoordinator.isInitialized)
+                processingCoordinator.choosePreProcessor(position)
         }
     }
 
@@ -271,9 +312,11 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-            when(position) {
-                0 -> processingCoordinator.setGaussianMaskSize(3)
-                1 -> processingCoordinator.setGaussianMaskSize(5)
+            if (::processingCoordinator.isInitialized) {
+                when (position) {
+                    0 -> processingCoordinator.setGaussianMaskSize(3)
+                    1 -> processingCoordinator.setGaussianMaskSize(5)
+                }
             }
         }
     }
@@ -287,15 +330,6 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
     override fun onResume() {
         super.onResume()
-        if (textureview.isAvailable)
-            openCamera()
-        else
-            textureview.surfaceTextureListener = surfaceListener
-
-        activity?.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
     }
 
     override fun onPause() {
@@ -308,11 +342,6 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
 
         processingCoordinator.closeAllocations()
-
-        activity?.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
     }
 
     override fun onCreateView(
@@ -334,6 +363,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         processorSpinner.onItemSelectedListener = processorSpinnerListener
         gaussianSpinner.onItemSelectedListener = gaussianSpinnerListener
         gaussianButton.setOnClickListener(gaussianButtonListener)
+        previewSurfaceView.getHolder().addCallback(surfaceHolderCallback)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

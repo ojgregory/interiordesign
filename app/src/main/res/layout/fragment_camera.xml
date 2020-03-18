@@ -1,20 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/frameLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="horizontal"
     tools:context=".Fragments.CameraFragment">
 
-    <TextureView
-        android:id="@+id/textureview"
-        android:layout_width="wrap_content"
-        android:layout_height="600dp"
-        app:layout_constraintBottom_toTopOf="@id/processorSpinner"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+    <uk.ac.plymouth.interiordesign.FixedAspectSurfaceView
+        android:id="@+id/previewSurfaceView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="4"
+        custom:aspectRatio="1.333"/>
+
+    <LinearLayout
+        android:layout_width="0px"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_margin="5dp"
+        >
 
     <Spinner
         android:id="@+id/preprocesserSpinner"
@@ -23,7 +32,8 @@
         android:entries="@array/preprocessors"
         android:spinnerMode="dialog"
         app:layout_constraintStart_toEndOf="@id/processorSpinner"
-        app:layout_constraintTop_toBottomOf="@id/textureview" />
+        app:layout_constraintLeft_toRightOf="@id/previewSurfaceView"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <Spinner
         android:id="@+id/processorSpinner"
@@ -31,9 +41,9 @@
         android:layout_height="wrap_content"
         android:entries="@array/processors"
         android:spinnerMode="dialog"
-        app:layout_constraintBottom_toTopOf="@id/textureview"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textureview" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/previewSurfaceView" />
 
     <Spinner
         android:id="@+id/gaussianSpinner"
@@ -63,5 +73,6 @@
         app:layout_constraintStart_toEndOf="@id/gaussianSigmaEditText"
         app:layout_constraintTop_toBottomOf="@id/processorSpinner"
         tools:text="@string/GaussianButton" />
+    </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
