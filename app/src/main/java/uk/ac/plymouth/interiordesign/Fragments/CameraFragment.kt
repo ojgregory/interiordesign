@@ -44,7 +44,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         val height = displayMetrics.heightPixels
         val width = displayMetrics.widthPixels
         val MAX_WIDTH = 1280
-        val TARGET_ASPECT = height / width
+        var TARGET_ASPECT : Float = width.toFloat() / height
         val ASPECT_TOLERANCE = 0.1f
 
         // Initialize an image reader which will be used to apply filter to preview
@@ -55,26 +55,41 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             .getOutputSizes(ImageFormat.YUV_420_888)
 
         var outputSize: Size = outputSizes.last()
-        var outputAspect =
-            outputSize.width / outputSize.height
+        var outputAspect : Float =
+            (outputSize.width / outputSize.height).toFloat()
         for (candidateSize in outputSizes) {
             if (candidateSize.width > MAX_WIDTH) continue
-            val candidateAspect =
-                candidateSize.width / candidateSize.height
+            val candidateAspect : Float =
+                candidateSize.width.toFloat() / candidateSize.height
             val goodCandidateAspect: Boolean =
                 Math.abs(candidateAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
             val goodOutputAspect: Boolean =
                 Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
-            if (goodCandidateAspect && !goodOutputAspect ||
-                candidateSize.width > outputSize.width
-            ) {
+            if ((goodCandidateAspect && !goodOutputAspect) || (candidateSize.width > outputSize.width)) {
                 outputSize = candidateSize
                 outputAspect = candidateAspect
             }
         }
+
+        if (!(Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE))
+            TARGET_ASPECT = 16.0f/9.0f
+
+        for (candidateSize in outputSizes) {
+            //if (candidateSize.height > MAX_HEIGHT) continue
+            val candidateAspect : Float =
+                candidateSize.width.toFloat() / candidateSize.height
+            val goodCandidateAspect: Boolean =
+                Math.abs(candidateAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
+            val goodOutputAspect: Boolean =
+                Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
+            if ((goodCandidateAspect && !goodOutputAspect) || (candidateSize.width > outputSize.width)) {
+                outputSize = candidateSize
+                outputAspect = candidateAspect
+            }
+        }
+
         // Switch width and height for portrait
-        val size:Size = Size(outputSize.height, outputSize.width)
-        Log.i(TAG, "Resolution chosen: $size")
+        Log.i(TAG, "Resolution chosen: $outputSize")
 
         // Configure processing
         // Configure processing
@@ -82,12 +97,14 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             0,
             0,
             mRS,
-            size
+            outputSize
         )
         setupProcessor()
 
+
         // Configure the output view - this will fire surfaceChanged
-        previewSurfaceView.getHolder().setFixedSize(outputSize.height, outputSize.width)
+        previewSurfaceView.setAspectRatio(outputAspect)
+        previewSurfaceView.getHolder().setFixedSize(outputSize.width, outputSize.height)
     }
 
     private fun setupProcessor() {
