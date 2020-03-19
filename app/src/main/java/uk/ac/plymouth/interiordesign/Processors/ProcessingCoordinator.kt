@@ -6,15 +6,19 @@ import android.os.HandlerThread
 import android.renderscript.*
 import android.util.Size
 import android.view.Surface
+import uk.ac.plymouth.interiordesign.Fillers.DummyFiller
+import uk.ac.plymouth.interiordesign.Fillers.Filler
 
 class ProcessingCoordinator(
     preProcessorChoice: Int,
     processorChoice: Int,
+    fillerChoice : Int,
     private val rs: RenderScript,
     private val dimensions: Size
 ) {
     private lateinit var preProcessor: PreProcessor
     private lateinit var processor: Processor
+    private lateinit var filler: Filler
     private var inputAllocation: Allocation
     private var outputAllocation: Allocation
     private var tempAllocation: Allocation
@@ -58,6 +62,7 @@ class ProcessingCoordinator(
 
         choosePreProcessor(preProcessorChoice)
         chooseProcessor(processorChoice)
+        chooseFiller(fillerChoice)
 
         val processingThread = HandlerThread("ProcessingCoordinator")
         processingThread.start()
@@ -66,6 +71,7 @@ class ProcessingCoordinator(
         processingTask = ProcessingTask(
             processor,
             preProcessor,
+            filler,
             processingHandler,
             inputAllocation,
             outputAllocation
@@ -75,6 +81,7 @@ class ProcessingCoordinator(
     internal class ProcessingTask(
         processor: Processor,
         preProcessor: PreProcessor,
+        filler: Filler,
         private val mProcessingHandler: Handler,
         private var inputAllocation: Allocation,
         private var outputAllocation: Allocation
@@ -94,11 +101,13 @@ class ProcessingCoordinator(
 
             preProcessor.run()
             processor.run()
+            filler.run()
             outputAllocation.ioSend()
         }
 
         var processor = processor
         var preProcessor = preProcessor
+        var filler = filler
 
         private var mPendingFrames = 0
         override fun onBufferAvailable(a: Allocation?) {
@@ -124,12 +133,12 @@ class ProcessingCoordinator(
 
     fun chooseProcessor(processorChoice: Int) {
         when (processorChoice) {
-            0 -> processor = DummyProcessor(rs, preProcessedAllocation, outputAllocation)
+            0 -> processor = DummyProcessor(rs, preProcessedAllocation, inputAllocation)
             1 -> if (::processor.isInitialized && processor is SobelProcessor)
                     (processor as SobelProcessor).changeOperators(0)
                  else {
                   processor =
-                        SobelProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
+                        SobelProcessor(rs, dimensions, preProcessedAllocation, inputAllocation)
                     (processor as SobelProcessor).changeOperators(0)
                  }
             2 -> {
@@ -137,28 +146,35 @@ class ProcessingCoordinator(
                     (processor as SobelProcessor).changeOperators(1)
                 else {
                     processor =
-                        SobelProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
+                        SobelProcessor(rs, dimensions, preProcessedAllocation, inputAllocation)
                     (processor as SobelProcessor).changeOperators(1)
                 }
             }
             3 -> {
                 if (!(processor is RobertsCrossProcessor))
                     processor =
-                        RobertsCrossProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
+                        RobertsCrossProcessor(rs, dimensions, preProcessedAllocation, inputAllocation)
             }
             4 -> {
                 if (!(processor is PrewittProcessor))
                     processor =
-                        PrewittProcessor(rs, dimensions, preProcessedAllocation, outputAllocation)
+                        PrewittProcessor(rs, dimensions, preProcessedAllocation, inputAllocation)
             }
             5 -> {
                 if (!(processor is CannyProcessor))
                     processor =
-                        CannyProcessor(rs, dimensions, preProcessedAllocation, outputAllocation, 21, 10)
+                        CannyProcessor(rs, dimensions, preProcessedAllocation, inputAllocation, 21, 10)
             }
         }
+        processingTask?.processor = processor
+    }
+
+    fun chooseFiller(fillerChoice: Int) {
+        when (fillerChoice) {
+            0 -> filler = DummyFiller(rs, inputAllocation, outputAllocation)
+        }
         if (processingTask != null)
-            processingTask.processor = processor
+            processingTask.filler = filler
     }
 
     fun choosePreProcessor(preProcessorChoice: Int) {

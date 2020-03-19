@@ -30,7 +30,7 @@ int *convYMask;
 // outPixels: device array where the modified image should be written.
 // imageW, imageH: width & height of the image.
 ////
-uchar4 __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
+uchar __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
     uchar newPixel;
 
     ulong pixelX;
@@ -56,14 +56,7 @@ uchar4 __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
     newPixel = (uchar) sqrt(pow(newValX, 2) + pow(newValY, 2));
 
 
-    int4 rgb;
-    rgb.r = newPixel;
-    rgb.g = newPixel;
-    rgb.b = newPixel;
-    rgb.a = 255;
-
-    // Write out merged HDR result
-    return convert_uchar4(clamp(rgb, 0, 255));
+    return newPixel;
 }
 
 ////
