@@ -3,7 +3,6 @@ package uk.ac.plymouth.interiordesign.Fragments
 import android.Manifest
 import android.content.Context
 import android.graphics.ImageFormat
-import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.os.Bundle
 import android.os.Handler
@@ -13,6 +12,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
 import android.view.*
+import android.view.GestureDetector.SimpleOnGestureListener
 import android.widget.AdapterView
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
@@ -116,23 +116,18 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         cameraWrapper!!.setSurfaces(targets)
     }
 
-    private val surfaceListener = object : TextureView.SurfaceTextureListener {
-        override fun onSurfaceTextureSizeChanged(
-            surface: SurfaceTexture?,
-            width: Int,
-            height: Int
-        ) {
+    private val surfaceViewGestureListener: GestureDetector.OnGestureListener =
+        object : SimpleOnGestureListener() {
+            override fun onDown(e: MotionEvent): Boolean {
+                return true
+            }
+
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                xTextView.text = e.x.toString()
+                yTextView.text = e.y.toString()
+                return true
+            }
         }
-
-        override fun onSurfaceTextureUpdated(surface: SurfaceTexture?) = Unit
-
-        override fun onSurfaceTextureDestroyed(surface: SurfaceTexture?) = true
-
-        override fun onSurfaceTextureAvailable(surface: SurfaceTexture?, width: Int, height: Int) {
-            Log.d(TAG, "textureSurface width: $width height: $height")
-        }
-
-    }
 
     private val surfaceHolderCallback = object : SurfaceHolder.Callback {
         override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
@@ -364,6 +359,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         gaussianSpinner.onItemSelectedListener = gaussianSpinnerListener
         gaussianButton.setOnClickListener(gaussianButtonListener)
         previewSurfaceView.getHolder().addCallback(surfaceHolderCallback)
+        previewSurfaceView.setGestureListener(this.context, surfaceViewGestureListener)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
