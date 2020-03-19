@@ -3,7 +3,6 @@ package uk.ac.plymouth.interiordesign.Fragments
 import android.Manifest
 import android.content.Context
 import android.graphics.ImageFormat
-import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.os.Bundle
 import android.os.Handler
@@ -13,6 +12,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
 import android.view.*
+import android.view.GestureDetector.SimpleOnGestureListener
 import android.widget.AdapterView
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
@@ -37,6 +37,25 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     }
 
+    private fun selectOutputSize(outputSizes: Array<Size>, MAX_WIDTH:Int, TARGET_ASPECT:Float, ASPECT_TOLERANCE : Float) : Size {
+        var outputSize: Size = outputSizes.last()
+        var outputAspect : Float =
+            (outputSize.width / outputSize.height).toFloat()
+        for (candidateSize in outputSizes) {
+            if (candidateSize.width > MAX_WIDTH) continue
+            val candidateAspect : Float =
+                candidateSize.width.toFloat() / candidateSize.height
+            val goodCandidateAspect: Boolean =
+                Math.abs(candidateAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
+            val goodOutputAspect: Boolean =
+                Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
+            if ((goodCandidateAspect && !goodOutputAspect) || (candidateSize.width > outputSize.width)) {
+                outputSize = candidateSize
+                outputAspect = candidateAspect
+            }
+        }
+        return outputSize
+    }
 
     private fun previewSession() {
         val displayMetrics = DisplayMetrics()
@@ -54,39 +73,14 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         )!!
             .getOutputSizes(ImageFormat.YUV_420_888)
 
-        var outputSize: Size = outputSizes.last()
-        var outputAspect : Float =
-            (outputSize.width / outputSize.height).toFloat()
-        for (candidateSize in outputSizes) {
-            if (candidateSize.width > MAX_WIDTH) continue
-            val candidateAspect : Float =
-                candidateSize.width.toFloat() / candidateSize.height
-            val goodCandidateAspect: Boolean =
-                Math.abs(candidateAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
-            val goodOutputAspect: Boolean =
-                Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
-            if ((goodCandidateAspect && !goodOutputAspect) || (candidateSize.width > outputSize.width)) {
-                outputSize = candidateSize
-                outputAspect = candidateAspect
-            }
-        }
+        var outputSize = selectOutputSize(outputSizes, MAX_WIDTH, TARGET_ASPECT, ASPECT_TOLERANCE)
+        var outputAspect = outputSize.width.toFloat() / outputSize.height
 
         if (!(Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE))
             TARGET_ASPECT = 16.0f/9.0f
 
-        for (candidateSize in outputSizes) {
-            //if (candidateSize.height > MAX_HEIGHT) continue
-            val candidateAspect : Float =
-                candidateSize.width.toFloat() / candidateSize.height
-            val goodCandidateAspect: Boolean =
-                Math.abs(candidateAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
-            val goodOutputAspect: Boolean =
-                Math.abs(outputAspect - TARGET_ASPECT) < ASPECT_TOLERANCE
-            if ((goodCandidateAspect && !goodOutputAspect) || (candidateSize.width > outputSize.width)) {
-                outputSize = candidateSize
-                outputAspect = candidateAspect
-            }
-        }
+        outputSize = selectOutputSize(outputSizes, MAX_WIDTH, TARGET_ASPECT, ASPECT_TOLERANCE)
+        outputAspect = outputSize.width.toFloat() / outputSize.height
 
         // Switch width and height for portrait
         Log.i(TAG, "Resolution chosen: $outputSize")
@@ -94,6 +88,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         // Configure processing
         // Configure processing
         processingCoordinator = ProcessingCoordinator(
+            0,
             0,
             0,
             mRS,
@@ -116,23 +111,18 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         cameraWrapper!!.setSurfaces(targets)
     }
 
-    private val surfaceListener = object : TextureView.SurfaceTextureListener {
-        override fun onSurfaceTextureSizeChanged(
-            surface: SurfaceTexture?,
-            width: Int,
-            height: Int
-        ) {
+    private val surfaceViewGestureListener: GestureDetector.OnGestureListener =
+        object : SimpleOnGestureListener() {
+            override fun onDown(e: MotionEvent): Boolean {
+                return true
+            }
+
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                xTextView.text = e.x.toString()
+                yTextView.text = e.y.toString()
+                return true
+            }
         }
-
-        override fun onSurfaceTextureUpdated(surface: SurfaceTexture?) = Unit
-
-        override fun onSurfaceTextureDestroyed(surface: SurfaceTexture?) = true
-
-        override fun onSurfaceTextureAvailable(surface: SurfaceTexture?, width: Int, height: Int) {
-            Log.d(TAG, "textureSurface width: $width height: $height")
-        }
-
-    }
 
     private val surfaceHolderCallback = object : SurfaceHolder.Callback {
         override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
@@ -364,6 +354,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         gaussianSpinner.onItemSelectedListener = gaussianSpinnerListener
         gaussianButton.setOnClickListener(gaussianButtonListener)
         previewSurfaceView.getHolder().addCallback(surfaceHolderCallback)
+        previewSurfaceView.setGestureListener(this.context, surfaceViewGestureListener)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
