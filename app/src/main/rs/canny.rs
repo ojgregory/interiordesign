@@ -4,6 +4,8 @@
 
 rs_allocation gCurrentFrame;
 rs_allocation input;
+rs_allocation temp_allocation;
+rs_allocation processing_allocation;
 rs_allocation Gx;
 rs_allocation Gy;
 
@@ -196,4 +198,14 @@ uchar4 __attribute__((kernel)) hystersis(uint32_t x, uint32_t y) {
   }
 
   return outputPixel;
+}
+
+void calculateCanny(rs_allocation output_image) {
+    rsForEach(convolveKernel, temp_allocation);
+    input = temp_allocation;
+    rsForEach(supression, temp_allocation);
+    input = temp_allocation;
+    rsForEach(doubleThreshold, temp_allocation);
+    input = temp_allocation;
+    rsForEach(hystersis, output_image);
 }
