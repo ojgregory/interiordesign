@@ -159,7 +159,7 @@ float2 __attribute__((kernel)) doubleThreshold(uint32_t x, uint32_t y) {
   return outputPixel;
 }
 
-uchar4 __attribute__((kernel)) hystersis(uint32_t x, uint32_t y) {
+uchar __attribute__((kernel)) hystersis(uint32_t x, uint32_t y) {
   uchar pixel = 0;
   float theta;
   float2 inputPixel = rsGetElementAt_float2(input, x, y);
@@ -168,36 +168,34 @@ uchar4 __attribute__((kernel)) hystersis(uint32_t x, uint32_t y) {
   uchar4 outputPixel;
 
   if (pixel == 0)
-    return (uchar4){0, 0, 0, 255};
+    return 0;
   else if (pixel == 255)
-    return (uchar4){255, 255, 255, 255};
+    return 255;
   else if (pixel == 128) {
   if(x > 1 && y > 1 && x < gImageW - 2 && y < gImageH - 2){
     if (fabs(rsGetElementAt_float2(input, x - 1, y - 1).x) ==
         255) {
-      return (uchar4){255, 255, 255, 255};
+      return 255;
     } else if (fabs(rsGetElementAt_float2(input, x, y - 1).x) == 255) {
-      return (uchar4){255, 255, 255, 255};
+      return 255;
     } else if (fabs(rsGetElementAt_float2(input, x + 1, y - 1).x) == 255) {
-      return (uchar4){255, 255, 255, 255};
+      return 255;
     } else if (fabs(rsGetElementAt_float2(input, x - 1, y).x) == 255) {
-      return (uchar4){255, 255, 255, 255};
+      return 255;
     } else if (fabs(rsGetElementAt_float2(input, x + 1, y).x) == 255) {
-      return (uchar4){255, 255, 255, 255};
+      return 255;
     } else if (fabs(rsGetElementAt_float2(input, x - 1, y + 1).x) == 255) {
-      return (uchar4){255, 255, 255, 255};
+      return 255;
     } else if (fabs(rsGetElementAt_float2(input, x, y + 1).x) == 255) {
-      return (uchar4){255, 255, 255, 255};
+      return 255;
     } else if (fabs(rsGetElementAt_float2(input, x + 1, y + 1).x) == 255) {
-      return (uchar4){255, 255, 255, 255};
+      return 255;
     }
     }
     else {
-        return (uchar4) {255,255,255,255};
+        return 255;
     }
   }
-
-  return outputPixel;
 }
 
 void calculateCanny(rs_allocation output_image) {

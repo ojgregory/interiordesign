@@ -16,6 +16,5 @@ uchar4 __attribute__((kernel)) convertYToRGB(uint32_t x, uint32_t y) {
     rgb.b = newPixel;
     rgb.a = 255;
 
-    // Write out merged HDR result
     return convert_uchar4(clamp(rgb, 0, 255));
 }
