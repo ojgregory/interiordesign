@@ -196,6 +196,7 @@ uchar __attribute__((kernel)) hystersis(uint32_t x, uint32_t y) {
         return 255;
     }
   }
+  return 0;
 }
 
 void calculateCanny(rs_allocation output_image) {
