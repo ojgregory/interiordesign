@@ -54,6 +54,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/processorSpinner" />
 
+    <Spinner
+            android:id="@+id/fillerSpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:entries="@array/fillers"
+            android:spinnerMode="dialog"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/previewSurfaceView" />
+
     <EditText
         android:id="@+id/gaussianSigmaEditText"
         android:layout_width="90dp"

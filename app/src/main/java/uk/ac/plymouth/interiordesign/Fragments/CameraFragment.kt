@@ -120,6 +120,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             override fun onSingleTapUp(e: MotionEvent): Boolean {
                 xTextView.text = e.x.toString()
                 yTextView.text = e.y.toString()
+                processingCoordinator.setFillerXandY(e.x.toInt(), e.y.toInt())
                 return true
             }
         }
@@ -285,6 +286,17 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
     }
 
+    private val fillerSpinnerListener = object : AdapterView.OnItemSelectedListener {
+        override fun onNothingSelected(parent: AdapterView<*>?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            if (::processingCoordinator.isInitialized)
+                processingCoordinator.chooseFiller(position)
+        }
+    }
+
     private val preProcessorSpinnerListener = object : AdapterView.OnItemSelectedListener {
         override fun onNothingSelected(parent: AdapterView<*>?) {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -351,6 +363,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         preprocesserSpinner.onItemSelectedListener = preProcessorSpinnerListener
         processorSpinner.onItemSelectedListener = processorSpinnerListener
+        fillerSpinner.onItemSelectedListener = fillerSpinnerListener
         gaussianSpinner.onItemSelectedListener = gaussianSpinnerListener
         gaussianButton.setOnClickListener(gaussianButtonListener)
         previewSurfaceView.getHolder().addCallback(surfaceHolderCallback)

@@ -8,6 +8,7 @@ import android.util.Size
 import android.view.Surface
 import uk.ac.plymouth.interiordesign.Fillers.DummyFiller
 import uk.ac.plymouth.interiordesign.Fillers.Filler
+import uk.ac.plymouth.interiordesign.Fillers.FloodFillSerial
 
 class ProcessingCoordinator(
     preProcessorChoice: Int,
@@ -172,9 +173,15 @@ class ProcessingCoordinator(
     fun chooseFiller(fillerChoice: Int) {
         when (fillerChoice) {
             0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation)
+            1 -> filler = FloodFillSerial(rs, tempAllocation, outputAllocation, dimensions)
         }
         if (processingTask != null)
             processingTask.filler = filler
+    }
+
+    fun setFillerXandY(x : Int, y: Int) {
+        filler.x = x
+        filler.y = y
     }
 
     fun choosePreProcessor(preProcessorChoice: Int) {

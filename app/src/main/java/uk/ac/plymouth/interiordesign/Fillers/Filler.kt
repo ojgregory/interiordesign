@@ -6,6 +6,8 @@ import android.view.Surface
 interface Filler {
     var mInputAllocation: Allocation
     var mOutputAllocation: Allocation
+    var x : Int
+    var y : Int
 
     fun run()
 

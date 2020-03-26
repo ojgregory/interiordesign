@@ -10,6 +10,16 @@ class DummyFiller(
     override var mOutputAllocation: Allocation
 ) : Filler {
     private val dummyScript : ScriptC_dummy = ScriptC_dummy(rs)
+    override var x: Int = 0
+        get() = field
+        set(value) {
+            field = value
+        }
+    override var y: Int = 0
+        get() = field
+        set(value) {
+            field = value
+        }
 
     override fun run() {
         dummyScript._gCurrentFrame = mInputAllocation
