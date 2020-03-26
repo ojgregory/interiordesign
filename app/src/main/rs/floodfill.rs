@@ -24,7 +24,7 @@ typedef struct {
 
 static void create_queue(Queue* queue) {
     queue->size = 0;
-    queue->q_length = 128;
+    queue->q_length = 10000;
     queue->front = -1;
     queue->rear = -1;
     queue->array = rsCreateAllocation_uchar2(queue->q_length);
@@ -50,15 +50,16 @@ static void resize(Queue* queue) {
 
 static void push(Queue* queue, uchar2 vertex) {
     if (queue->size == queue->q_length - 1) {
-        resize(queue);
+        //resize(queue);
     }
 
-    rsSetElementAt_uchar2(queue->array, vertex, ++queue->rear);
+    queue->rear++;
+    rsSetElementAt_uchar2(queue->array, vertex, queue->rear);
 
-    if (queue->rear == queue->q_length && queue->front != 0)
-        queue->rear = 0;
-    else if (queue->rear == queue->q_length)
-        resize(queue);
+//    if (queue->rear == queue->q_length && queue->front != 0)
+        //queue->rear = 0;
+   // else if (queue->rear == queue->q_length)
+        //resize(queue);
 
     queue->size++;
 }
@@ -67,11 +68,12 @@ static uchar2 pop(Queue* queue) {
     if (queue->size == 0)
         return 0;
 
-    uchar return_value = rsGetElementAt_uchar(queue->array, ++queue->front);
-    if (queue->front == queue->q_length && queue->rear != 0)
-            queue->front = 0;
-    else if (queue->front == queue->q_length)
-        resize(queue);
+    queue->front++;
+    uchar return_value = rsGetElementAt_uchar(queue->array, queue->front);
+//    if (queue->front == queue->q_length && queue->rear != 0)
+            //queue->front = 0;
+  //  else if (queue->front == queue->q_length)
+        //resize(queue);
     queue->size--;
     return return_value;
 }
@@ -87,7 +89,7 @@ static bool isEmpty(Queue queue) {
 void serial_implementation(rs_allocation input, rs_allocation output, int target_x, int target_y, int replacement_colour) {
     uchar target_colour = rsGetElementAtYuv_uchar_Y(input, target_x, target_y);
     uchar4 red = (uchar4) {255, 0, 0, 255};
-    int counter = 128;
+    int counter = 10000;
     Queue q;
     create_queue(&q);
     uchar2 n;
@@ -111,5 +113,7 @@ void serial_implementation(rs_allocation input, rs_allocation output, int target
             push(&q, (uchar2){n.x, n.y+1});
             rsSetElementAt_uchar4(output, red, n.x, n.y+1);
         }
+        counter--;
     }
+    //rsDebug("return", 1);
 }

@@ -4,6 +4,7 @@ import android.renderscript.Allocation
 import android.renderscript.RenderScript
 import android.util.Size
 import androidx.annotation.Dimension
+import uk.ac.plymouth.interiordesign.ScriptC_dummy
 import uk.ac.plymouth.interiordesign.ScriptC_floodfill
 
 class FloodFillSerial(
@@ -13,6 +14,7 @@ class FloodFillSerial(
     private var dimensions: Size
 ) : Filler  {
     private val serialScript = ScriptC_floodfill(rs)
+    private val dummyScript = ScriptC_dummy(rs)
     override var x: Int = 5
         get() = field
         set(value) {
@@ -28,6 +30,8 @@ class FloodFillSerial(
     override fun run() {
         serialScript._imageH = dimensions.height
         serialScript._imageW = dimensions.width
+        dummyScript._gCurrentFrame = mInputAllocation
+        dummyScript.forEach_convertYToRGB(mOutputAllocation)
         serialScript.invoke_serial_implementation(mInputAllocation, mOutputAllocation, x, y, 0)
     }
 }

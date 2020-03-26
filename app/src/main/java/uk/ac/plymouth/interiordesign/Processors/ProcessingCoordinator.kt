@@ -171,10 +171,20 @@ class ProcessingCoordinator(
     }
 
     fun chooseFiller(fillerChoice: Int) {
+        var x = 0
+        var y = 0
+        if (::filler.isInitialized) {
+            x = filler.x
+            y = filler.y
+        }
         when (fillerChoice) {
             0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation)
             1 -> filler = FloodFillSerial(rs, tempAllocation, outputAllocation, dimensions)
         }
+
+        filler.x = x
+        filler.y = y
+
         if (processingTask != null)
             processingTask.filler = filler
     }
