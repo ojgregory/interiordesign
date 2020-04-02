@@ -8,6 +8,7 @@ import android.util.Size
 import android.view.Surface
 import uk.ac.plymouth.interiordesign.Fillers.DummyFiller
 import uk.ac.plymouth.interiordesign.Fillers.Filler
+import uk.ac.plymouth.interiordesign.Fillers.FloodFillParallel
 import uk.ac.plymouth.interiordesign.Fillers.FloodFillSerial
 
 class ProcessingCoordinator(
@@ -152,12 +153,12 @@ class ProcessingCoordinator(
                 }
             }
             3 -> {
-                if (!(processor is RobertsCrossProcessor))
+                if (processor !is RobertsCrossProcessor)
                     processor =
                         RobertsCrossProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
             }
             4 -> {
-                if (!(processor is PrewittProcessor))
+                if (processor !is PrewittProcessor)
                     processor =
                         PrewittProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
             }
@@ -180,6 +181,7 @@ class ProcessingCoordinator(
         when (fillerChoice) {
             0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation)
             1 -> filler = FloodFillSerial(rs, tempAllocation, outputAllocation, dimensions)
+            2 -> filler = FloodFillParallel(rs, tempAllocation, outputAllocation, dimensions)
         }
 
         filler.x = x

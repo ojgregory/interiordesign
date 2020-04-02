@@ -19,5 +19,6 @@
     <string-array name="fillers">
         <item>None</item>
         <item>Serial Flood Fill</item>
+        <item>Parallel Flood Fill</item>
     </string-array>
 </resources>

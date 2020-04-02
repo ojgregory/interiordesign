@@ -14,13 +14,17 @@ typedef struct {
     int nedges;
 } Bag;
 
-typedef struct {
+typedef struct Queue {
     rs_allocation array;
     int size;
     int q_length;
     int front;
     int rear;
 } Queue;
+
+Queue currentQ, nextQ;
+rs_allocation input;
+uchar target_colour;
 
 static void create_queue(Queue* queue) {
     queue->size = 0;
@@ -68,13 +72,13 @@ static uchar2 pop(Queue* queue) {
     if (queue->size == 0)
         return 0;
 
+    queue->size--;
     queue->front++;
     uchar return_value = rsGetElementAt_uchar(queue->array, queue->front);
 //    if (queue->front == queue->q_length && queue->rear != 0)
             //queue->front = 0;
   //  else if (queue->front == queue->q_length)
         //resize(queue);
-    queue->size--;
     return return_value;
 }
 
@@ -85,6 +89,63 @@ static bool isEmpty(Queue queue) {
     return false;
 }
 
+static void resetQueue(Queue *queue) {
+    queue->size = 0;
+    queue->q_length = 10000;
+    queue->front = -1;
+    queue->rear = -1;
+}
+
+void RS_KERNEL processNextQ(rs_allocation output) {
+    uchar4 red = (uchar4) {255, 0, 0, 255};
+    uchar2 n;
+    //if (isEmpty(currentQ))
+     //   return;
+    //n = pop(&currentQ);
+    n = (uchar2){10,10};
+    if (n.x != 0 && rsGetElementAt_uchar4(output, n.x-1, n.y).r != red.r && rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) == target_colour) {
+        push(&nextQ, (uchar2){n.x-1, n.y});
+        rsSetElementAt_uchar4(output, red, n.x-1, n.y);
+    }
+    if (n.x != imageW && rsGetElementAt_uchar4(output, n.x+1, n.y).r != red.r && rsGetElementAtYuv_uchar_Y(input, n.x+1, n.y) == target_colour) {
+        push(&nextQ, (uchar2){n.x+1, n.y});
+        rsSetElementAt_uchar4(output, red, n.x+1, n.y);
+    }
+    if (n.y != 0 && rsGetElementAt_uchar4(output, n.x, n.y-1).r != red.r && rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) == target_colour) {
+        push(&nextQ, (uchar2){n.x, n.y-1});
+        rsSetElementAt_uchar4(output, red, n.x, n.y-1);
+    }
+    if (n.y != imageH && rsGetElementAt_uchar4(output, n.x, n.y+1).r != red.r && rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) == target_colour) {
+        push(&nextQ, (uchar2){n.x, n.y+1});
+        rsSetElementAt_uchar4(output, red, n.x, n.y+1);
+    }
+
+}
+
+void parallel_implementation(rs_allocation output, int target_x, int target_y, int replacement_colour) {
+    target_colour = rsGetElementAtYuv_uchar_Y(input, target_x, target_y);
+    uchar4 red = (uchar4) {255, 0, 0, 255};
+    Queue temp;
+    create_queue(&currentQ);
+    create_queue(&nextQ);
+    push(&currentQ, (uchar2){target_x, target_y});
+    rsDebug("x - input", rsAllocationGetDimX(input));
+    rsDebug("y - input", rsAllocationGetDimY(input));
+    rsDebug("z - input", rsAllocationGetDimZ(input));
+    rsDebug("x - output", rsAllocationGetDimX(output));
+    rsDebug("y - output", rsAllocationGetDimY(output));
+    rsDebug("z - output", rsAllocationGetDimZ(output));
+
+    while(!isEmpty(currentQ)) {
+        rsForEach(processNextQ, output);
+        rsDebug("size", currentQ.size);
+        currentQ = temp;
+        currentQ = nextQ;
+        rsDebug("size", nextQ.size);
+        nextQ = currentQ;
+        resetQueue(&nextQ);
+    }
+}
 
 void serial_implementation(rs_allocation input, rs_allocation output, int target_x, int target_y, int replacement_colour) {
     uchar target_colour = rsGetElementAtYuv_uchar_Y(input, target_x, target_y);
@@ -109,7 +170,7 @@ void serial_implementation(rs_allocation input, rs_allocation output, int target
             push(&q, (uchar2){n.x, n.y-1});
             rsSetElementAt_uchar4(output, red, n.x, n.y-1);
         }
-        if (n.x != imageH && rsGetElementAt_uchar4(output, n.x, n.y+1).r != red.r && rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) == target_colour) {
+        if (n.y != imageH && rsGetElementAt_uchar4(output, n.x, n.y+1).r != red.r && rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) == target_colour) {
             push(&q, (uchar2){n.x, n.y+1});
             rsSetElementAt_uchar4(output, red, n.x, n.y+1);
         }
