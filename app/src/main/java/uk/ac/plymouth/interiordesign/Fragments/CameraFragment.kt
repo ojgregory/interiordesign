@@ -64,7 +64,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         val width = displayMetrics.widthPixels
         val MAX_WIDTH = 1280
         var TARGET_ASPECT : Float = width.toFloat() / height
-        val ASPECT_TOLERANCE = 0.1f
+        val ASPECT_TOLERANCE = 0.01f
 
         // Initialize an image reader which will be used to apply filter to preview
         val outputSizes: Array<Size> = cameraCharacteristics(

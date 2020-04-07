@@ -32,6 +32,7 @@ class FloodFillParallel(
         dummyScript._gCurrentFrame = mInputAllocation
         dummyScript.forEach_convertYToRGB(mOutputAllocation)
         parallelScript._input = mInputAllocation
+        parallelScript._output = mOutputAllocation
         parallelScript.invoke_parallel_implementation(mOutputAllocation, x, y, 0)
     }
 }
