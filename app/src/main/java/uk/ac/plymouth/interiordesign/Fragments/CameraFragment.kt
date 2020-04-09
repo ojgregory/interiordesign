@@ -31,6 +31,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
     private lateinit var mPreviewSurface: Surface
 
     private var cameraWrapper: CameraWrapper? = null
+    private lateinit var outputSize : Size
 
 
     private val cameraManager by lazy {
@@ -95,7 +96,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             outputSize
         )
         setupProcessor()
-
+        this.outputSize = outputSize
 
         // Configure the output view - this will fire surfaceChanged
         previewSurfaceView.setAspectRatio(outputAspect)
@@ -118,9 +119,11 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             }
 
             override fun onSingleTapUp(e: MotionEvent): Boolean {
-                xTextView.text = e.x.toString()
-                yTextView.text = e.y.toString()
-                processingCoordinator.setFillerXandY(e.x.toInt(), e.y.toInt())
+                val x = (e.rawX * outputSize.width) / previewSurfaceView.width
+                val y = (e.rawY * outputSize.height) / previewSurfaceView.height
+                xTextView.text = x.toString()
+                yTextView.text = y.toString()
+                processingCoordinator.setFillerXandY(x.toInt(), y.toInt())
                 return true
             }
         }
