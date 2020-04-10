@@ -55,6 +55,9 @@ uchar __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
 
     newPixel = (uchar) sqrt(pow(newValX, 2) + pow(newValY, 2));
 
+    if (newPixel < 100)
+        newPixel = 0;
+
 
     return newPixel;
 }
