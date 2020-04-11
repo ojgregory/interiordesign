@@ -30,7 +30,7 @@ uchar target_colour;
 
 static void create_queue(Queue* queue) {
     queue->size = 0;
-    queue->q_length = 20000;
+    queue->q_length = 1000;
     queue->front = 0;
     queue->rear = -1;
     queue->array = rsCreateAllocation_uint2(queue->q_length);
@@ -56,7 +56,7 @@ static void resize(Queue* queue) {
 
 static void push(Queue* queue, uint2 vertex) {
     if (queue->size == queue->q_length - 1) {
-        //resize(queue);
+        resize(queue);
     }
 
     queue->rear++;
@@ -76,7 +76,10 @@ static uint2 pop(Queue* queue) {
 
     queue->size--;
     queue->front++;
-    return rsGetElementAt_uint2(queue->array, --queue->front);
+    rsDebug("pop front", queue->front);
+    rsDebug("pop size", queue->size);
+    if (queue->front-1 > -1 && queue->front-1 < queue->q_length-1)
+        return rsGetElementAt_uint2(queue->array, queue->front-1);
 //    if (queue->front == queue->q_length && queue->rear != 0)
             //queue->front = 0;
   //  else if (queue->front == queue->q_length)
@@ -93,7 +96,6 @@ static bool isEmpty(Queue queue) {
 static void resetQueue(Queue *queue) {
     rsDebug("reset top", 1);
     queue->size = 0;
-    queue->q_length = 20000;
     queue->front = 0;
     queue->rear = -1;
     rsDebug("reset bot", 1);
@@ -110,6 +112,8 @@ static void copyQueue(Queue *result, Queue *origin) {
 void RS_KERNEL processNextQ() {
     uchar4 red = (uchar4) {255, 0, 0, 255};
     uint2 n;
+    if (isEmpty(currentQ))
+        return;
     rsDebug("pop pre", currentQ.size);
     n = pop(&currentQ);
     rsDebug("pop post", currentQ.size);
@@ -141,7 +145,7 @@ void RS_KERNEL processNextQ() {
             //rsSetElementAt_uchar4(output, red, n.x, n.y+1);
         }
     }
-
+    rsDebug("return processNextQ()", 1);
 }
 
 void parallel_implementation(int target_x, int target_y, int replacement_colour) {
@@ -163,7 +167,7 @@ void parallel_implementation(int target_x, int target_y, int replacement_colour)
     rsDebug("z - output", rsAllocationGetDimZ(output));
     isProcessed = rsCreateAllocation_uchar(rsAllocationGetDimX(input), rsAllocationGetDimY(input));
 
-    while(currentQ.size < 10000 && counter < 256 && !isEmpty(currentQ)) {
+    while(currentQ.size < 800 && counter < 256 && !isEmpty(currentQ)) {
         rs_script_call_t opts = {0};
         rsDebug("currentQ.front", currentQ.front);
         rsDebug("currentQ.rear", currentQ.rear);
