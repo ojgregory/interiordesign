@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.activity_main.*
 import uk.ac.plymouth.interiordesign.Fragments.CameraFragment
+import uk.ac.plymouth.interiordesign.Fragments.ColourPickerFragment
 import uk.ac.plymouth.interiordesign.Processors.GaussianCalculator
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -24,7 +25,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val cameraFragment = CameraFragment.newInstance()
-        addFragment(cameraFragment)
+        val colourPickerFragment = ColourPickerFragment()
+        addFragment(colourPickerFragment)
         val gaussianCalculator = GaussianCalculator(1.0, 5)
         gaussianCalculator.createGaussianKernel()
     }
