@@ -2,6 +2,7 @@ package uk.ac.plymouth.interiordesign.Fragments
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.graphics.ImageFormat
 import android.hardware.camera2.*
 import android.os.Bundle
@@ -14,11 +15,13 @@ import android.util.Size
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.widget.AdapterView
+import android.widget.Button
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 import uk.ac.plymouth.interiordesign.CameraWrapper
+import uk.ac.plymouth.interiordesign.ColourActivity
 import uk.ac.plymouth.interiordesign.Processors.ProcessingCoordinator
 import uk.ac.plymouth.interiordesign.R
 
@@ -140,6 +143,13 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
     }
 
+    private val colourButtonListener = object : View.OnClickListener {
+        override fun onClick(v: View?) {
+            val intent = Intent(context, ColourActivity::class.java).apply{}
+            startActivity(intent)
+        }
+
+    }
 
     private fun <T> cameraCharacteristics(cameraId: String, key: CameraCharacteristics.Key<T>): T? {
         val characteristics = cameraManager.getCameraCharacteristics(cameraId)
@@ -349,8 +359,9 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         processorSpinner.onItemSelectedListener = processorSpinnerListener
         gaussianSpinner.onItemSelectedListener = gaussianSpinnerListener
         gaussianButton.setOnClickListener(gaussianButtonListener)
-        previewSurfaceView.getHolder().addCallback(surfaceHolderCallback)
+        previewSurfaceView.holder.addCallback(surfaceHolderCallback)
         previewSurfaceView.setGestureListener(this.context, surfaceViewGestureListener)
+        colourButton.setOnClickListener(colourButtonListener)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

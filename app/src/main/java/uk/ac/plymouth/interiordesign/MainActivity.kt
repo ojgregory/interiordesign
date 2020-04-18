@@ -25,12 +25,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        //val cameraFragment = CameraFragment.newInstance()
-        //addFragment(cameraFragment)
-        //val gaussianCalculator = GaussianCalculator(1.0, 5)
-        //gaussianCalculator.createGaussianKernel()
-        val intent = Intent(this, ColourActivity::class.java).apply{}
-        startActivity(intent)
+        val cameraFragment = CameraFragment.newInstance()
+        addFragment(cameraFragment)
+        val gaussianCalculator = GaussianCalculator(1.0, 5)
+        gaussianCalculator.createGaussianKernel()
 
     }
 
