@@ -7,16 +7,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import kotlinx.android.synthetic.main.fragment_colour.view.*
+import uk.ac.plymouth.interiordesign.Fragments.DataReturnInterface
 
 
 class ColourAdapter(context: Context, resource: Int, objects: MutableList<Colour>) :
     ArrayAdapter<Colour>(context, resource, objects) {
+    var colourReturnInterface: DataReturnInterface<Colour> = (context as ColourActivity)
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val colour = getItem(position)
         val newView : View = convertView ?: LayoutInflater.from(context).inflate(R.layout.fragment_colour, parent, false)
 
         changeColour(colour, newView)
+        newView.colourTextView.setOnClickListener {
+            colourReturnInterface.returnData(getItem(position)!!)
+        }
 
         // Return the completed view to render on screen
         return newView

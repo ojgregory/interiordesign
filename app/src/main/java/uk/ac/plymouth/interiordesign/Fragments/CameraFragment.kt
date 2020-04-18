@@ -1,8 +1,10 @@
 package uk.ac.plymouth.interiordesign.Fragments
 
 import android.Manifest
+import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.ImageFormat
 import android.hardware.camera2.*
 import android.os.Bundle
@@ -21,6 +23,7 @@ import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 import uk.ac.plymouth.interiordesign.CameraWrapper
+import uk.ac.plymouth.interiordesign.Colour
 import uk.ac.plymouth.interiordesign.ColourActivity
 import uk.ac.plymouth.interiordesign.Processors.ProcessingCoordinator
 import uk.ac.plymouth.interiordesign.R
@@ -32,6 +35,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
     private lateinit var mUiHandler: Handler
     private lateinit var mPreviewRequest: CaptureRequest
     private lateinit var mPreviewSurface: Surface
+    private var colour = Colour(0, 0, 0, 255, "Black")
 
     private var cameraWrapper: CameraWrapper? = null
 
@@ -146,7 +150,23 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
     private val colourButtonListener = object : View.OnClickListener {
         override fun onClick(v: View?) {
             val intent = Intent(context, ColourActivity::class.java).apply{}
-            startActivity(intent)
+            startActivityForResult(intent, 0)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 0) {
+            if (resultCode == RESULT_OK) {
+                // Get String data from Intent
+                val name = data!!.getStringExtra("name")
+                val r = data.getIntExtra("r", 0)
+                val g = data.getIntExtra("g", 0)
+                val b = data.getIntExtra("b", 0)
+                val a = data.getIntExtra("a", 0)
+                colour = Colour(r, g, b, a, name)
+                colourDisplay.setBackgroundColor(Color.argb(colour.a, colour.r,colour.g, colour.b))
+            }
         }
 
     }

@@ -1,17 +1,18 @@
 package uk.ac.plymouth.interiordesign
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.PersistableBundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import uk.ac.plymouth.interiordesign.Fragments.ColourPickerFragment
 import uk.ac.plymouth.interiordesign.Fragments.ColoursFragment
-import uk.ac.plymouth.interiordesign.R
+import uk.ac.plymouth.interiordesign.Fragments.DataReturnInterface
+
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-class ColourActivity : AppCompatActivity() {
+class ColourActivity : AppCompatActivity(), DataReturnInterface<Colour> {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_colours)
@@ -26,4 +27,17 @@ class ColourActivity : AppCompatActivity() {
         fragmentTransaction.add(R.id.colourFragmentContainer, fragment)
         fragmentTransaction.commit()
     }
+
+    override fun returnData(data: Colour) {
+        // Put the String to pass back into an Intent and close this activity
+        val intent = Intent()
+        intent.putExtra("r", data.r)
+        intent.putExtra("g", data.g)
+        intent.putExtra("b", data.b)
+        intent.putExtra("a", data.a)
+        intent.putExtra("name", data.name)
+        setResult(Activity.RESULT_OK, intent)
+        finish()
+    }
+
 }
