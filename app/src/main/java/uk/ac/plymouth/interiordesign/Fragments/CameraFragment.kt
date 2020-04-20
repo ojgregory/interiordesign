@@ -383,6 +383,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         previewSurfaceView.holder.addCallback(surfaceHolderCallback)
         previewSurfaceView.setGestureListener(this.context, surfaceViewGestureListener)
         colourButton.setOnClickListener(colourButtonListener)
+        colourDisplay.setBackgroundColor(Color.argb(colour.a, colour.r,colour.g, colour.b))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
