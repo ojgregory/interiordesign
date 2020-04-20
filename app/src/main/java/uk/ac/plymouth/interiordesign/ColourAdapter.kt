@@ -8,9 +8,10 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import kotlinx.android.synthetic.main.fragment_colour.view.*
 import uk.ac.plymouth.interiordesign.Fragments.DataReturnInterface
+import uk.ac.plymouth.interiordesign.Room.Colour
 
 
-class ColourAdapter(context: Context, resource: Int, objects: MutableList<Colour>) :
+class ColourAdapter(context: Context, resource: Int, objects: List<Colour>) :
     ArrayAdapter<Colour>(context, resource, objects) {
     var colourReturnInterface: DataReturnInterface<Colour> = (context as ColourActivity)
 

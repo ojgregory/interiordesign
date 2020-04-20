@@ -17,13 +17,12 @@ import android.util.Size
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.widget.AdapterView
-import android.widget.Button
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 import uk.ac.plymouth.interiordesign.CameraWrapper
-import uk.ac.plymouth.interiordesign.Colour
+import uk.ac.plymouth.interiordesign.Room.Colour
 import uk.ac.plymouth.interiordesign.ColourActivity
 import uk.ac.plymouth.interiordesign.Processors.ProcessingCoordinator
 import uk.ac.plymouth.interiordesign.R
@@ -35,7 +34,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
     private lateinit var mUiHandler: Handler
     private lateinit var mPreviewRequest: CaptureRequest
     private lateinit var mPreviewSurface: Surface
-    private var colour = Colour(0, 0, 0, 255, "Black")
+    private var colour =
+        Colour(0, 0, 0, 255, "Black")
 
     private var cameraWrapper: CameraWrapper? = null
 
@@ -164,7 +164,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 val g = data.getIntExtra("g", 0)
                 val b = data.getIntExtra("b", 0)
                 val a = data.getIntExtra("a", 0)
-                colour = Colour(r, g, b, a, name)
+                colour =
+                    Colour(r, g, b, a, name)
                 colourDisplay.setBackgroundColor(Color.argb(colour.a, colour.r,colour.g, colour.b))
             }
         }
@@ -291,12 +292,12 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
     @AfterPermissionGranted(REQUEST_CAMERA_PERMISSION)
     private fun checkCameraPermission() {
-        if (EasyPermissions.hasPermissions(activity!!, Manifest.permission.CAMERA)) {
+        if (EasyPermissions.hasPermissions(requireActivity(), Manifest.permission.CAMERA)) {
             Log.d(TAG, "App has camera permission")
             findAndOpenCamera()
         } else {
             EasyPermissions.requestPermissions(
-                activity!!,
+                requireActivity(),
                 getString(R.string.camera_request_rationale),
                 REQUEST_CAMERA_PERMISSION,
                 Manifest.permission.CAMERA
@@ -386,8 +387,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mRS = RenderScript.create(this.activity!!)
-        mUiHandler = Handler(Looper.getMainLooper());
+        mRS = RenderScript.create(requireActivity())
+        mUiHandler = Handler(Looper.getMainLooper())
     }
 
     private fun openCamera() {
@@ -424,7 +425,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
     }
 
     override fun getErrorString(e: CameraAccessException?): String? {
-        val errorMessage: String = "AAAAAA!"
+        val errorMessage = "AAAAAA!"
         /*errorMessage = when (e!!.reason) {
             CameraAccessException.CAMERA_DISABLED -> getString(R.string.camera_disabled)
             CameraAccessException.CAMERA_DISCONNECTED -> getString(R.string.camera_disconnected)
