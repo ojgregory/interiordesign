@@ -57,14 +57,17 @@ class CannyProcessor(
         mCannyScript._lowThreshold = lowThreshold
         mCannyScript.bind_convXMask(mOperatorAllocationX)
         mCannyScript.bind_convYMask(mOperatorAllocationY)
+        mCannyScript._temp_allocation = mTempAllocation
+        mCannyScript._processing_allocation = mProcessingAllocation
         // Run processing pass
-        mCannyScript.forEach_convolveKernel(mProcessingAllocation)
-        mCannyScript._input = mProcessingAllocation
-        mCannyScript.forEach_supression(mTempAllocation)
-        mCannyScript._input = mTempAllocation
-        mCannyScript.forEach_doubleThreshold(mProcessingAllocation)
-        mCannyScript._input = mProcessingAllocation
-        mCannyScript.forEach_hystersis(mOutputAllocation)
+//        mCannyScript.forEach_convolveKernel(mProcessingAllocation)
+//        mCannyScript._input = mProcessingAllocation
+//        mCannyScript.forEach_supression(mTempAllocation)
+//        mCannyScript._input = mTempAllocation
+//        mCannyScript.forEach_doubleThreshold(mProcessingAllocation)
+//        mCannyScript._input = mProcessingAllocation
+//        mCannyScript.forEach_hystersis(mOutputAllocation)
+        mCannyScript.invoke_calculateCanny(mOutputAllocation)
     }
 
 }

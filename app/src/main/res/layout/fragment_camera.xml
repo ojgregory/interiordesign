@@ -84,6 +84,17 @@
             android:id="@+id/yTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/colourDisplay"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:background="@color/colorAccent"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Set Colour"
+            android:id="@+id/colourButton"/>
     </LinearLayout>
 
 </LinearLayout>

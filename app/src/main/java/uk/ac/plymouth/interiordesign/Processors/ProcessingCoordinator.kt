@@ -133,12 +133,12 @@ class ProcessingCoordinator(
 
     fun chooseProcessor(processorChoice: Int) {
         when (processorChoice) {
-            0 -> processor = DummyProcessor(rs, preProcessedAllocation, inputAllocation)
+            0 -> processor = DummyProcessor(rs, preProcessedAllocation, tempAllocation)
             1 -> if (::processor.isInitialized && processor is SobelProcessor)
                     (processor as SobelProcessor).changeOperators(0)
                  else {
                   processor =
-                        SobelProcessor(rs, dimensions, preProcessedAllocation, inputAllocation)
+                        SobelProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
                     (processor as SobelProcessor).changeOperators(0)
                  }
             2 -> {
@@ -146,24 +146,24 @@ class ProcessingCoordinator(
                     (processor as SobelProcessor).changeOperators(1)
                 else {
                     processor =
-                        SobelProcessor(rs, dimensions, preProcessedAllocation, inputAllocation)
+                        SobelProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
                     (processor as SobelProcessor).changeOperators(1)
                 }
             }
             3 -> {
                 if (!(processor is RobertsCrossProcessor))
                     processor =
-                        RobertsCrossProcessor(rs, dimensions, preProcessedAllocation, inputAllocation)
+                        RobertsCrossProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
             }
             4 -> {
                 if (!(processor is PrewittProcessor))
                     processor =
-                        PrewittProcessor(rs, dimensions, preProcessedAllocation, inputAllocation)
+                        PrewittProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
             }
             5 -> {
-                if (!(processor is CannyProcessor))
+                if (processor !is CannyProcessor)
                     processor =
-                        CannyProcessor(rs, dimensions, preProcessedAllocation, inputAllocation, 21, 10)
+                        CannyProcessor(rs, dimensions, preProcessedAllocation, tempAllocation, 21, 10)
             }
         }
         processingTask?.processor = processor
@@ -171,7 +171,7 @@ class ProcessingCoordinator(
 
     fun chooseFiller(fillerChoice: Int) {
         when (fillerChoice) {
-            0 -> filler = DummyFiller(rs, inputAllocation, outputAllocation)
+            0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation)
         }
         if (processingTask != null)
             processingTask.filler = filler
