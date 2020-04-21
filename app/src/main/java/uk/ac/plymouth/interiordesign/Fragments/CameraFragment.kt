@@ -1,7 +1,10 @@
 package uk.ac.plymouth.interiordesign.Fragments
 
 import android.Manifest
+import android.app.Activity.RESULT_OK
 import android.content.Context
+import android.content.Intent
+import android.graphics.Color
 import android.graphics.ImageFormat
 import android.hardware.camera2.*
 import android.os.Bundle
@@ -19,6 +22,8 @@ import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 import uk.ac.plymouth.interiordesign.CameraWrapper
+import uk.ac.plymouth.interiordesign.Room.Colour
+import uk.ac.plymouth.interiordesign.ColourActivity
 import uk.ac.plymouth.interiordesign.Processors.ProcessingCoordinator
 import uk.ac.plymouth.interiordesign.R
 
@@ -29,6 +34,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
     private lateinit var mUiHandler: Handler
     private lateinit var mPreviewRequest: CaptureRequest
     private lateinit var mPreviewSurface: Surface
+    private var colour =
+        Colour(0, 0, 0, 255, "Black")
 
     private var cameraWrapper: CameraWrapper? = null
     private lateinit var outputSize : Size
@@ -144,6 +151,30 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
     }
 
+    private val colourButtonListener = object : View.OnClickListener {
+        override fun onClick(v: View?) {
+            val intent = Intent(context, ColourActivity::class.java).apply{}
+            startActivityForResult(intent, 0)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 0) {
+            if (resultCode == RESULT_OK) {
+                // Get String data from Intent
+                val name = data!!.getStringExtra("name")
+                val r = data.getIntExtra("r", 0)
+                val g = data.getIntExtra("g", 0)
+                val b = data.getIntExtra("b", 0)
+                val a = data.getIntExtra("a", 0)
+                colour =
+                    Colour(r, g, b, a, name)
+                colourDisplay.setBackgroundColor(Color.argb(colour.a, colour.r,colour.g, colour.b))
+            }
+        }
+
+    }
 
     private fun <T> cameraCharacteristics(cameraId: String, key: CameraCharacteristics.Key<T>): T? {
         val characteristics = cameraManager.getCameraCharacteristics(cameraId)
@@ -265,12 +296,12 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
     @AfterPermissionGranted(REQUEST_CAMERA_PERMISSION)
     private fun checkCameraPermission() {
-        if (EasyPermissions.hasPermissions(activity!!, Manifest.permission.CAMERA)) {
+        if (EasyPermissions.hasPermissions(requireActivity(), Manifest.permission.CAMERA)) {
             Log.d(TAG, "App has camera permission")
             findAndOpenCamera()
         } else {
             EasyPermissions.requestPermissions(
-                activity!!,
+                requireActivity(),
                 getString(R.string.camera_request_rationale),
                 REQUEST_CAMERA_PERMISSION,
                 Manifest.permission.CAMERA
@@ -333,10 +364,6 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
     }
 
-    override fun onResume() {
-        super.onResume()
-    }
-
     override fun onPause() {
         super.onPause()
         // Wait until camera is closed to ensure the next application can open it
@@ -369,14 +396,16 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         fillerSpinner.onItemSelectedListener = fillerSpinnerListener
         gaussianSpinner.onItemSelectedListener = gaussianSpinnerListener
         gaussianButton.setOnClickListener(gaussianButtonListener)
-        previewSurfaceView.getHolder().addCallback(surfaceHolderCallback)
+        previewSurfaceView.holder.addCallback(surfaceHolderCallback)
         previewSurfaceView.setGestureListener(this.context, surfaceViewGestureListener)
+        colourButton.setOnClickListener(colourButtonListener)
+        colourDisplay.setBackgroundColor(Color.argb(colour.a, colour.r,colour.g, colour.b))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mRS = RenderScript.create(this.activity!!)
-        mUiHandler = Handler(Looper.getMainLooper());
+        mRS = RenderScript.create(requireActivity())
+        mUiHandler = Handler(Looper.getMainLooper())
     }
 
     private fun openCamera() {
@@ -413,7 +442,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
     }
 
     override fun getErrorString(e: CameraAccessException?): String? {
-        val errorMessage: String = "AAAAAA!"
+        val errorMessage = "AAAAAA!"
         /*errorMessage = when (e!!.reason) {
             CameraAccessException.CAMERA_DISABLED -> getString(R.string.camera_disabled)
             CameraAccessException.CAMERA_DISCONNECTED -> getString(R.string.camera_disconnected)

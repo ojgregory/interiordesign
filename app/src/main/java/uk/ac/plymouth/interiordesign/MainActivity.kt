@@ -1,6 +1,7 @@
 package uk.ac.plymouth.interiordesign
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
@@ -15,6 +16,7 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.activity_main.*
 import uk.ac.plymouth.interiordesign.Fragments.CameraFragment
+import uk.ac.plymouth.interiordesign.Fragments.ColourPickerFragment
 import uk.ac.plymouth.interiordesign.Processors.GaussianCalculator
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -27,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         addFragment(cameraFragment)
         val gaussianCalculator = GaussianCalculator(1.0, 5)
         gaussianCalculator.createGaussianKernel()
+
     }
 
     private fun addFragment(fragment: Fragment) {
