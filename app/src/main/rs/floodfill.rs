@@ -27,6 +27,7 @@ rs_allocation input;
 rs_allocation output;
 rs_allocation isProcessed;
 uchar target_colour;
+uchar4 colour;
 
 static void create_queue(Queue* queue) {
     queue->size = 0;
@@ -102,7 +103,6 @@ static void copyQueue(Queue *result, Queue *origin) {
 }
 
 void RS_KERNEL processNextQ() {
-    uchar4 red = (uchar4) {255, 0, 0, 255};
     uint2 n;
     if (isEmpty(currentQ))
         return;
@@ -114,7 +114,7 @@ void RS_KERNEL processNextQ() {
     rsDebug("n.y", n.y);
     if (n.x < imageW && n.x > 0 && n.y < imageH && n.y > 0) {
         rsDebug("red pre", rsGetElementAt_uchar4(output, n.x, n.y).b);
-        rsSetElementAt_uchar4(output, red, n.x, n.y);
+        rsSetElementAt_uchar4(output, colour, n.x, n.y);
         rsDebug("red post", rsGetElementAt_uchar4(output, n.x, n.y).b);
         if (n.x != 0 && (rsGetElementAt_uchar(isProcessed,n.x-1, n.y) != 1 || rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) == target_colour)) {
             push(&nextQ, (uint2){n.x-1, n.y});

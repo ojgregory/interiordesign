@@ -30,6 +30,7 @@ class ColoursFragment : Fragment(), DataReturnInterface<Colour>{
         super.onViewCreated(view, savedInstanceState)
         val colours = mutableListOf<Colour>()
         val colourDao = ColourDatabase.getDatabase(requireContext()).colourDao()
+        var colourAdapter : ColourAdapter
         GlobalScope.launch {
             colourDao.deleteAll()
             colourDao.insert(
@@ -104,12 +105,84 @@ class ColoursFragment : Fragment(), DataReturnInterface<Colour>{
                     "BLACK"
                 )
             )
-
-            val colourAdapter =
-                ColourAdapter(requireContext(), R.layout.fragment_colour, colourDao.getAll())
+        }
+        colours.add(
+            Colour(
+                255,
+                0,
+                0,
+                255,
+                "RED"
+            )
+        )
+        colours.add(
+            Colour(
+                0,
+                255,
+                0,
+                255,
+                "GREEN"
+            )
+        )
+        colours.add(
+            Colour(
+                0,
+                0,
+                255,
+                255,
+                "BLUE"
+            )
+        )
+        colours.add(
+            Colour(
+                255,
+                255,
+                0,
+                255,
+                "YELLOW"
+            )
+        )
+        colours.add(
+            Colour(
+                255,
+                0,
+                255,
+                255,
+                "MAGENTA"
+            )
+        )
+        colours.add(
+            Colour(
+                0,
+                255,
+                255,
+                255,
+                "CYAN"
+            )
+        )
+        colours.add(
+            Colour(
+                255,
+                255,
+                255,
+                255,
+                "WHITE"
+            )
+        )
+        colours.add(
+            Colour(
+                0,
+                0,
+                0,
+                255,
+                "BLACK"
+            )
+        )
+            colourAdapter =
+                ColourAdapter(requireContext(), R.layout.fragment_colour, colours)
 
             colourList.adapter = colourAdapter
-        }
+
     }
 
     override fun onAttach(context: Context) {

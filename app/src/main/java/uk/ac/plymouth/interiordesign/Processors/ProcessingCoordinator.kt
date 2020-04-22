@@ -10,6 +10,7 @@ import uk.ac.plymouth.interiordesign.Fillers.DummyFiller
 import uk.ac.plymouth.interiordesign.Fillers.Filler
 import uk.ac.plymouth.interiordesign.Fillers.FloodFillParallel
 import uk.ac.plymouth.interiordesign.Fillers.FloodFillSerial
+import uk.ac.plymouth.interiordesign.Room.Colour
 
 class ProcessingCoordinator(
     preProcessorChoice: Int,
@@ -27,6 +28,7 @@ class ProcessingCoordinator(
     private var preProcessedAllocation: Allocation
     private var processingHandler: Handler
     private var processingTask: ProcessingTask
+    private lateinit var colour: Colour
 
     init {
         val yuvTypeBuilder = Type.Builder(
@@ -181,7 +183,7 @@ class ProcessingCoordinator(
         when (fillerChoice) {
             0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation)
             1 -> filler = FloodFillSerial(rs, tempAllocation, outputAllocation, dimensions)
-            2 -> filler = FloodFillParallel(rs, tempAllocation, outputAllocation, dimensions)
+            2 -> filler = FloodFillParallel(rs, tempAllocation, outputAllocation, dimensions, colour)
         }
 
         filler.x = x
@@ -236,5 +238,11 @@ class ProcessingCoordinator(
         inputAllocation.destroy()
         outputAllocation.destroy()
         tempAllocation.destroy()
+    }
+
+    fun setColour(c: Colour) {
+        this.colour = c
+        if (filler is FloodFillParallel)
+            (filler as FloodFillParallel).colour = colour
     }
 }

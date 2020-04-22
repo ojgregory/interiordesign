@@ -102,6 +102,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             mRS,
             outputSize
         )
+        processingCoordinator.setColour(colour)
         setupProcessor()
         this.outputSize = outputSize
 
@@ -171,6 +172,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 colour =
                     Colour(r, g, b, a, name)
                 colourDisplay.setBackgroundColor(Color.argb(colour.a, colour.r,colour.g, colour.b))
+                processingCoordinator.setColour(colour)
             }
         }
 
@@ -327,6 +329,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
             if (::processingCoordinator.isInitialized)
+                processingCoordinator.setColour(colour)
                 processingCoordinator.chooseFiller(position)
         }
     }
