@@ -28,6 +28,9 @@ rs_allocation output;
 rs_allocation isProcessed;
 uchar target_colour;
 uchar4 colour;
+int fuzzy = 10;
+int upperBound;
+int lowerBound;
 
 static void create_queue(Queue* queue) {
     queue->size = 0;
@@ -71,8 +74,6 @@ static uint2 pop(Queue* queue) {
 
     queue->size--;
     queue->front++;
-    rsDebug("pop front", queue->front);
-    rsDebug("pop size", queue->size);
     if (queue->front-1 >= 0 && queue->front-1 < queue->q_length)
         return rsGetElementAt_uint2(queue->array, queue->front-1);
 //    if (queue->front == queue->q_length && queue->rear != 0)
@@ -106,29 +107,39 @@ void RS_KERNEL processNextQ() {
     uint2 n;
     if (isEmpty(currentQ))
         return;
-    rsDebug("pop pre", currentQ.size);
     n = pop(&currentQ);
-    rsDebug("pop post", currentQ.size);
     //n = (uint2){100,100};
-    rsDebug("n.x", n.x);
-    rsDebug("n.y", n.y);
     if (n.x < imageW && n.x > 0 && n.y < imageH && n.y > 0) {
-        rsDebug("red pre", rsGetElementAt_uchar4(output, n.x, n.y).b);
         rsSetElementAt_uchar4(output, colour, n.x, n.y);
-        rsDebug("red post", rsGetElementAt_uchar4(output, n.x, n.y).b);
-        if (n.x != 0 && (rsGetElementAt_uchar(isProcessed,n.x-1, n.y) != 1 || rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) == target_colour)) {
+        if (n.x != 0 &&
+        rsGetElementAt_uchar(isProcessed,n.x-1, n.y) != 1 &&
+        rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) < upperBound &&
+        rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) > lowerBound)
+        {
             push(&nextQ, (uint2){n.x-1, n.y});
             rsSetElementAt_uchar(isProcessed, 1, n.x-1, n.y);
         }
-        if (n.x != imageW && (rsGetElementAt_uchar(isProcessed,n.x+1, n.y) != 1 || rsGetElementAtYuv_uchar_Y(input, n.x+1, n.y) == target_colour)) {
+        if (n.x != imageW &&
+        rsGetElementAt_uchar(isProcessed,n.x+1, n.y) != 1 &&
+        rsGetElementAtYuv_uchar_Y(input, n.x+1, n.y) < upperBound &&
+        rsGetElementAtYuv_uchar_Y(input, n.x+1, n.y) > lowerBound )
+        {
             push(&nextQ, (uint2){n.x+1, n.y});
             rsSetElementAt_uchar(isProcessed, 1, n.x+1, n.y);
         }
-        if (n.y != 0 && (rsGetElementAt_uchar(isProcessed,n.x, n.y-1) != 1 || rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) == target_colour)) {
+        if (n.y != 0 &&
+        rsGetElementAt_uchar(isProcessed,n.x, n.y-1) != 1 &&
+        rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) < upperBound &&
+        rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) > lowerBound)
+        {
             push(&nextQ, (uint2){n.x, n.y-1});
             rsSetElementAt_uchar(isProcessed, 1, n.x, n.y-1);
         }
-        if (n.y != imageH && (rsGetElementAt_uchar(isProcessed,n.x, n.y+1) != 1 || rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) == target_colour)) {
+        if (n.y != imageH &&
+        rsGetElementAt_uchar(isProcessed,n.x, n.y+1) != 1 &&
+        rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) < upperBound &&
+        rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) > lowerBound)
+        {
             push(&nextQ, (uint2){n.x, n.y+1});
             rsSetElementAt_uchar(isProcessed, 1, n.x, n.y+1);
         }
@@ -143,34 +154,23 @@ void parallel_implementation(int target_x, int target_y, int replacement_colour)
     Queue temp;
     create_queue(&currentQ);
     create_queue(&nextQ);
-    rsDebug("target_x", target_x);
-    rsDebug("target_y", target_y);
     rsSetElementAt_uchar4(output, red, target_x, target_y);
     push(&currentQ, (uint2){target_x, target_y});
-    rsDebug("x - input", rsAllocationGetDimX(input));
-    rsDebug("y - input", rsAllocationGetDimY(input));
-    rsDebug("z - input", rsAllocationGetDimZ(input));
-    rsDebug("x - output", rsAllocationGetDimX(output));
-    rsDebug("y - output", rsAllocationGetDimY(output));
-    rsDebug("z - output", rsAllocationGetDimZ(output));
     isProcessed = rsCreateAllocation_uchar(imageW, imageH);
+    upperBound = target_colour + fuzzy;
+    lowerBound = target_colour - fuzzy;
 
-    while(currentQ.size < 800 && counter < 256 && !isEmpty(currentQ)) {
+    while(!isEmpty(currentQ)) {
         rs_script_call_t opts = {0};
-        rsDebug("currentQ.front", currentQ.front);
-        rsDebug("currentQ.rear", currentQ.rear);
         opts.arrayStart = currentQ.front;
         opts.arrayEnd = currentQ.rear + 1;
         opts.xStart = currentQ.front;
         opts.xEnd = currentQ.rear + 1;
 
         rsForEachWithOptions(processNextQ, &opts);
-        rsDebug("current = next top", nextQ.front);
         copyQueue(&currentQ, &nextQ);
-        rsDebug("current = next bot", currentQ.front);
         resetQueue(&nextQ);
         counter++;
-        rsDebug("counter", counter);
     }
 }
 
@@ -184,24 +184,42 @@ void serial_implementation(int target_x, int target_y, int replacement_colour) {
     create_queue(&currentQ);
     create_queue(&nextQ);
     push(&currentQ, (uint2){target_x, target_y});
+    upperBound = target_colour + fuzzy;
+    lowerBound = target_colour - fuzzy;
     do {
     while (!isEmpty(currentQ)) {
         rsDebug("length", currentQ.q_length);
         n = pop(&currentQ);
         rsSetElementAt_uchar4(output, colour, n.x, n.y);
-        if (n.x != 0 && (rsGetElementAt_uchar(isProcessed,n.x-1, n.y) != 1 && rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) == target_colour)) {
+        if (n.x != 0 &&
+        rsGetElementAt_uchar(isProcessed,n.x-1, n.y) != 1 &&
+        rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) < upperBound &&
+        rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) > lowerBound)
+        {
             push(&nextQ, (uint2){n.x-1, n.y});
             rsSetElementAt_uchar(isProcessed, 1, n.x-1, n.y);
         }
-        if (n.x != imageW && (rsGetElementAt_uchar(isProcessed,n.x+1, n.y) != 1 && rsGetElementAtYuv_uchar_Y(input, n.x+1, n.y) == target_colour)) {
+        if (n.x != imageW &&
+        rsGetElementAt_uchar(isProcessed,n.x+1, n.y) != 1 &&
+        rsGetElementAtYuv_uchar_Y(input, n.x+1, n.y) < upperBound &&
+        rsGetElementAtYuv_uchar_Y(input, n.x+1, n.y) > lowerBound )
+        {
             push(&nextQ, (uint2){n.x+1, n.y});
             rsSetElementAt_uchar(isProcessed, 1, n.x+1, n.y);
         }
-        if (n.y != 0 && (rsGetElementAt_uchar(isProcessed,n.x, n.y-1) != 1 && rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) == target_colour)) {
+        if (n.y != 0 &&
+        rsGetElementAt_uchar(isProcessed,n.x, n.y-1) != 1 &&
+        rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) < upperBound &&
+        rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) > lowerBound)
+        {
             push(&nextQ, (uint2){n.x, n.y-1});
             rsSetElementAt_uchar(isProcessed, 1, n.x, n.y-1);
         }
-        if (n.y != imageH && (rsGetElementAt_uchar(isProcessed,n.x, n.y+1) != 1 && rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) == target_colour)) {
+        if (n.y != imageH &&
+        rsGetElementAt_uchar(isProcessed,n.x, n.y+1) != 1 &&
+        rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) < upperBound &&
+        rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) > lowerBound)
+        {
             push(&nextQ, (uint2){n.x, n.y+1});
             rsSetElementAt_uchar(isProcessed, 1, n.x, n.y+1);
         }
