@@ -13,7 +13,7 @@ class FloodFillParallel(
     override var mInputAllocation: Allocation,
     override var mOutputAllocation: Allocation,
     private var dimensions: Size,
-    var colour: Colour
+    override var colour: Colour
 ) : Filler  {
     private val parallelScript = ScriptC_floodfill(rs)
     private val dummyScript = ScriptC_dummy(rs)

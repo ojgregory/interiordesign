@@ -2,8 +2,10 @@ package uk.ac.plymouth.interiordesign.Fillers
 
 import android.renderscript.Allocation
 import android.renderscript.RenderScript
+import android.renderscript.Short4
 import android.util.Size
 import androidx.annotation.Dimension
+import uk.ac.plymouth.interiordesign.Room.Colour
 import uk.ac.plymouth.interiordesign.ScriptC_dummy
 import uk.ac.plymouth.interiordesign.ScriptC_floodfill
 
@@ -11,7 +13,8 @@ class FloodFillSerial(
     rs : RenderScript,
     override var mInputAllocation: Allocation,
     override var mOutputAllocation: Allocation,
-    private var dimensions: Size
+    private var dimensions: Size,
+    override var colour: Colour
 ) : Filler  {
     private val serialScript = ScriptC_floodfill(rs)
     private val dummyScript = ScriptC_dummy(rs)
@@ -32,6 +35,11 @@ class FloodFillSerial(
         serialScript._imageW = dimensions.width
         dummyScript._gCurrentFrame = mInputAllocation
         dummyScript.forEach_convertYToRGB(mOutputAllocation)
-        serialScript.invoke_serial_implementation(mInputAllocation, mOutputAllocation, x, y, 0)
+        serialScript._colour = Short4(colour.r.toShort(), colour.g.toShort(),
+            colour.b.toShort(), colour.a.toShort()
+        )
+        serialScript._output = mOutputAllocation
+        serialScript._input = mInputAllocation
+        serialScript.invoke_serial_implementation(x, y, 0)
     }
 }

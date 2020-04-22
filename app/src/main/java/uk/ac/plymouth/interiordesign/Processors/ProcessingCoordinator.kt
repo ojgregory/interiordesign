@@ -180,9 +180,11 @@ class ProcessingCoordinator(
             x = filler.x
             y = filler.y
         }
+        if (!::colour.isInitialized)
+            colour = Colour(255, 255, 255, 255, "White")
         when (fillerChoice) {
-            0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation)
-            1 -> filler = FloodFillSerial(rs, tempAllocation, outputAllocation, dimensions)
+            0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation, colour)
+            1 -> filler = FloodFillSerial(rs, tempAllocation, outputAllocation, dimensions, colour)
             2 -> filler = FloodFillParallel(rs, tempAllocation, outputAllocation, dimensions, colour)
         }
 
@@ -242,7 +244,6 @@ class ProcessingCoordinator(
 
     fun setColour(c: Colour) {
         this.colour = c
-        if (filler is FloodFillParallel)
-            (filler as FloodFillParallel).colour = colour
+        filler.colour = colour
     }
 }

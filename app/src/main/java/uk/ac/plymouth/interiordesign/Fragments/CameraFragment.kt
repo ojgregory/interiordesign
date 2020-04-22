@@ -35,7 +35,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
     private lateinit var mPreviewRequest: CaptureRequest
     private lateinit var mPreviewSurface: Surface
     private var colour =
-        Colour(0, 0, 0, 255, "Black")
+        Colour(255, 0, 0, 255, "Red")
 
     private var cameraWrapper: CameraWrapper? = null
     private lateinit var outputSize : Size
@@ -328,9 +328,10 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         }
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-            if (::processingCoordinator.isInitialized)
+            if (::processingCoordinator.isInitialized) {
                 processingCoordinator.setColour(colour)
                 processingCoordinator.chooseFiller(position)
+            }
         }
     }
 
