@@ -63,7 +63,7 @@ static void push(Queue* queue, uint2 vertex) {
         resize(queue);
     }
 
-    if (queue->rear >= 0)
+    if (queue->rear >= 0 && queue->rear < queue->q_length)
         rsSetElementAt_uint2(queue->array, vertex, queue->rear);
     queue->rear++;
     queue->size++;
@@ -72,7 +72,7 @@ static void push(Queue* queue, uint2 vertex) {
 static uint2 pop(Queue* queue) {
     queue->size--;
     queue->front++;
-    if (queue->front-1 >= 0)
+    if (queue->front-1 >= 0 && queue->front-1 < queue->q_length)
         return rsGetElementAt_uint2(queue->array, queue->front-1);
 //    if (queue->front == queue->q_length && queue->rear != 0)
             //queue->front = 0;
@@ -198,6 +198,7 @@ void checkQueue(Queue q, Queue otherQ) {
 
 void serial_implementation(int target_x, int target_y, int replacement_colour) {
     uchar target_colour = rsGetElementAtYuv_uchar_Y(input, target_x, target_y);
+    rsDebug("target", target_colour);
     uint2 n;
     isProcessed = rsCreateAllocation_uchar(imageW, imageH);
     create_queue(&currentQ);
@@ -205,7 +206,7 @@ void serial_implementation(int target_x, int target_y, int replacement_colour) {
     push(&currentQ, (uint2){target_x, target_y});
     upperBound = target_colour + fuzzy;
     lowerBound = target_colour - fuzzy;
-    do {
+    while (!isEmpty(currentQ)) {
     while (!isEmpty(currentQ)) {
         n = pop(&currentQ);
         if (rsGetElementAt_uchar(isProcessed,n.x, n.y) == 1)
@@ -256,13 +257,13 @@ void serial_implementation(int target_x, int target_y, int replacement_colour) {
             push(&nextQ, (uint2){n.x, n.y+1});
             //rsSetElementAt_uchar(isProcessed, 1, n.x, n.y+1);
         }
-    }
+    };
         //printQueue(nextQ);
         copyQueue(&currentQ, &nextQ);
         //checkQueue(nextQ,currentQ);
         resetQueue(&nextQ);
-        rsDebug("size", currentQ.size);
-    } while (!isEmpty(currentQ));
+        //rsDebug("size", currentQ.size);
+    };
     //rsDebug("size", currentQ.size);
     //rsDebug("north", rsGetElementAt_uchar(isProcessed,target_x, target_y-1));
     //rsDebug("south", rsGetElementAt_uchar(isProcessed,target_x, target_y+1));
