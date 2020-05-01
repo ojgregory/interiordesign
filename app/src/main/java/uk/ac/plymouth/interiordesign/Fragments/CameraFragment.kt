@@ -129,8 +129,6 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             override fun onSingleTapUp(e: MotionEvent): Boolean {
                 val x = (e.rawX * outputSize.width) / previewSurfaceView.width
                 val y = (e.rawY * outputSize.height) / previewSurfaceView.height
-                xTextView.text = x.toString()
-                yTextView.text = y.toString()
                 processingCoordinator.setFillerXandY(x.toInt(), y.toInt())
                 return true
             }
