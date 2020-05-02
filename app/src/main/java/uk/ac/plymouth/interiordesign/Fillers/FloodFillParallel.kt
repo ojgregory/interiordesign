@@ -12,6 +12,7 @@ class FloodFillParallel(
     rs : RenderScript,
     override var mInputAllocation: Allocation,
     override var mOutputAllocation: Allocation,
+    override var mOriginalAllocation: Allocation,
     private var dimensions: Size,
     override var colour: Colour
 ) : Filler  {
@@ -32,8 +33,8 @@ class FloodFillParallel(
     override fun run() {
         parallelScript._imageH = dimensions.height
         parallelScript._imageW = dimensions.width
-        dummyScript._gCurrentFrame = mInputAllocation
-        dummyScript.forEach_convertYToRGB(mOutputAllocation)
+        dummyScript._gCurrentFrame = mOriginalAllocation
+        dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
         parallelScript._input = mInputAllocation
         parallelScript._output = mOutputAllocation
         println(x)
