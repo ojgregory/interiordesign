@@ -180,6 +180,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 val a = data.getIntExtra("a", 0)
                 colour =
                     Colour(r, g, b, a, name)
+                colourDisplay.setBackgroundColor(colour.rgba)
                 processingCoordinator.setColour(colour)
             }
         }
@@ -414,6 +415,8 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
         previewSurfaceView.holder.addCallback(surfaceHolderCallback)
         previewSurfaceView.setGestureListener(this.context, surfaceViewGestureListener)
         settings_button.setOnClickListener(settingsButtonListener)
+        colourDisplay.setOnClickListener(colourButtonListener)
+        colourDisplay.setBackgroundColor(colour.rgba)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

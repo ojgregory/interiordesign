@@ -9,11 +9,11 @@
     android:orientation="horizontal"
     tools:context=".Fragments.CameraFragment">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_margin="0dp"
         >
 
@@ -23,8 +23,17 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_settings_black_24dp"
             android:drawablePadding="10dp"
-            android:textColor="#FFF" />
-    </LinearLayout>
+            android:textColor="#FFF"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+        <TextView
+            android:id="@+id/colourDisplay"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/colorAccent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
     <uk.ac.plymouth.interiordesign.FixedAspectSurfaceView
         android:id="@+id/previewSurfaceView"
         android:layout_width="0dp"
