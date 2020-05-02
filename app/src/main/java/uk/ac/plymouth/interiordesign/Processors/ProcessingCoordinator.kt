@@ -146,7 +146,7 @@ class ProcessingCoordinator(
                     (processor as SobelProcessor).changeOperators(0)
                  }
             2 -> {
-                if (processor is SobelProcessor)
+                if (::processor.isInitialized && processor is SobelProcessor)
                     (processor as SobelProcessor).changeOperators(1)
                 else {
                     processor =
@@ -155,17 +155,17 @@ class ProcessingCoordinator(
                 }
             }
             3 -> {
-                if (processor !is RobertsCrossProcessor)
+                if (::processor.isInitialized && processor !is RobertsCrossProcessor)
                     processor =
                         RobertsCrossProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
             }
             4 -> {
-                if (processor !is PrewittProcessor)
+                if (::processor.isInitialized && processor !is PrewittProcessor)
                     processor =
                         PrewittProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
             }
             5 -> {
-                if (processor !is CannyProcessor)
+                if (::processor.isInitialized && processor !is CannyProcessor)
                     processor =
                         CannyProcessor(rs, dimensions, preProcessedAllocation, tempAllocation, 21, 10)
             }
