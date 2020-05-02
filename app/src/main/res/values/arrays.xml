@@ -38,8 +38,8 @@
         <item>Parallel Flood Fill</item>
     </string-array>
     <string-array name="settings_fillers_values">
-        <item>None</item>
-        <item>Serial Flood Fill</item>
-        <item>Parallel Flood Fill</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
     </string-array>
 </resources>

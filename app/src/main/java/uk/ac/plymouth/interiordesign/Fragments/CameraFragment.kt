@@ -18,6 +18,7 @@ import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.widget.AdapterView
 import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.fragment_camera.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
@@ -26,6 +27,7 @@ import uk.ac.plymouth.interiordesign.Room.Colour
 import uk.ac.plymouth.interiordesign.ColourActivity
 import uk.ac.plymouth.interiordesign.Processors.ProcessingCoordinator
 import uk.ac.plymouth.interiordesign.R
+import uk.ac.plymouth.interiordesign.SettingsActivity
 
 
 class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.CameraReadyListener {
@@ -95,14 +97,23 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
         // Configure processing
         // Configure processing
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this.context)
+        val preprocessor_choice = prefs.getString("preprocessor_list", "0")!!.toInt()
+        val preprocessor_sigma_choice = prefs.getString("sigma", "1.6")!!.toDouble()
+        val preprocessor_mask_choice = prefs.getString("preprocessor_mask_list", "0")!!.toInt()
+        val processor_choice = prefs.getString("processor_list", "0")!!.toInt()
+        val filler_choice = prefs.getString("filler_list", "0")!!.toInt()
+
         processingCoordinator = ProcessingCoordinator(
-            0,
-            0,
-            0,
+            preprocessor_choice,
+            processor_choice,
+            filler_choice,
             mRS,
             outputSize
         )
         processingCoordinator.setColour(colour)
+        processingCoordinator.setGaussianMaskSize(preprocessor_mask_choice)
+        processingCoordinator.setGaussianSigma(preprocessor_sigma_choice)
         setupProcessor()
         this.outputSize = outputSize
 
@@ -169,7 +180,6 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 val a = data.getIntExtra("a", 0)
                 colour =
                     Colour(r, g, b, a, name)
-                colourDisplay.setBackgroundColor(Color.argb(colour.a, colour.r,colour.g, colour.b))
                 processingCoordinator.setColour(colour)
             }
         }
@@ -361,7 +371,15 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
     private val gaussianButtonListener = object : View.OnClickListener {
         override fun onClick(v: View?) {
-            processingCoordinator.setGaussianSigma(gaussianSigmaEditText.text.toString().toDouble())
+            //processingCoordinator.setGaussianSigma(gaussianSigmaEditText.text.toString().toDouble())
+        }
+
+    }
+
+    private val settingsButtonListener = object : View.OnClickListener {
+        override fun onClick(v: View?) {
+            val intent = Intent(context, SettingsActivity::class.java).apply{}
+            startActivity(intent)
         }
 
     }
@@ -393,15 +411,9 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-        preprocesserSpinner.onItemSelectedListener = preProcessorSpinnerListener
-        processorSpinner.onItemSelectedListener = processorSpinnerListener
-        fillerSpinner.onItemSelectedListener = fillerSpinnerListener
-        gaussianSpinner.onItemSelectedListener = gaussianSpinnerListener
-        gaussianButton.setOnClickListener(gaussianButtonListener)
         previewSurfaceView.holder.addCallback(surfaceHolderCallback)
         previewSurfaceView.setGestureListener(this.context, surfaceViewGestureListener)
-        colourButton.setOnClickListener(colourButtonListener)
-        colourDisplay.setBackgroundColor(Color.argb(colour.a, colour.r,colour.g, colour.b))
+        settings_button.setOnClickListener(settingsButtonListener)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
