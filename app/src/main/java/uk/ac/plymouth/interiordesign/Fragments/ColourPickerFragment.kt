@@ -9,6 +9,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentTransaction
 import kotlinx.android.synthetic.main.fragment_colour_picker.*
 import uk.ac.plymouth.interiordesign.R
+import uk.ac.plymouth.interiordesign.Room.Colour
 
 
 class ColourPickerFragment : DialogFragment() {
@@ -42,6 +43,7 @@ class ColourPickerFragment : DialogFragment() {
         seekBarR.setOnSeekBarChangeListener(seekBarListener)
         seekBarG.setOnSeekBarChangeListener(seekBarListener)
         seekBarB.setOnSeekBarChangeListener(seekBarListener)
+        createColour.setOnClickListener(createColourListener)
     }
 
     private val seekBarListener = object : SeekBar.OnSeekBarChangeListener {
@@ -71,6 +73,28 @@ class ColourPickerFragment : DialogFragment() {
         override fun onStopTrackingTouch(seekBar: SeekBar?) {
         }
 
+    }
+
+    private val createColourListener = object : View.OnClickListener {
+        override fun onClick(v: View?) {
+            val name = colourNameInput.text.toString()
+            val r = seekBarR.progress
+            val g = seekBarG.progress
+            val b = seekBarB.progress
+            val a = seekBarA.progress
+
+            val colour = Colour(r, g, b, a, name)
+            sendColour(colour)
+        }
+
+    }
+
+    fun sendColour(data : Colour) {
+        // Notice the use of `getTargetFragment` which will be set when the dialog is displayed
+        // Notice the use of `getTargetFragment` which will be set when the dialog is displayed
+        val listener = targetFragment as DataReturnInterface<Colour>?
+        listener!!.returnData(data)
+        dismiss()
     }
 
 }

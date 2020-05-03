@@ -7,9 +7,15 @@
     android:layout_centerHorizontal="true"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <EditText
+        android:layout_width="255dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/colourNameInput"
+        android:hint="@string/input_colour_name" />
+
     <TextView
         android:id="@+id/labelR"
-        android:text="Red"
+        android:text="@string/red"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
@@ -28,7 +34,7 @@
 
     <TextView
         android:id="@+id/labelG"
-        android:text="Green"
+        android:text="@string/green"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
@@ -46,7 +52,7 @@
 
     <TextView
         android:id="@+id/labelB"
-        android:text="Blue"
+        android:text="@string/blue"
         android:layout_marginStart="50dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -64,7 +70,7 @@
 
     <TextView
         android:id="@+id/labelA"
-        android:text="Alpha"
+        android:text="@string/alpha"
         android:layout_marginStart="50dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -87,5 +93,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
     </FrameLayout>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/createColour"
+        android:text="@string/create_colour"
+        />
 
 </LinearLayout>

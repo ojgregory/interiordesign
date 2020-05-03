@@ -33,9 +33,14 @@ class ColoursFragment : Fragment(), DataReturnInterface<Colour>{
         override fun onClick(v: View?) {
             // Create the fragment and show it as a dialog.
             val newFragment = ColourPickerFragment.newInstance()
+            newFragment!!.setTargetFragment(this@ColoursFragment, 300);
             newFragment!!.show(parentFragmentManager, "dialog")
         }
     }
+
+    //override fun returnData(data : Colour) {
+
+    //}
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -135,6 +140,12 @@ class ColoursFragment : Fragment(), DataReturnInterface<Colour>{
     }
 
     override fun returnData(data: Colour) {
-        colourReturnInterface.returnData(data)
+       GlobalScope.launch {
+           val colourDao = ColourDatabase.getDatabase(requireContext()).colourDao()
+           colourDao.insert(data)
+           GlobalScope.launch(Dispatchers.Main) {
+               colourAdapter.add(data)
+           }
+       }
     }
 }
