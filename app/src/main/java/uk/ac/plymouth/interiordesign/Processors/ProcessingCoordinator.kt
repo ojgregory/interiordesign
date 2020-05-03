@@ -183,9 +183,9 @@ class ProcessingCoordinator(
         if (!::colour.isInitialized)
             colour = Colour(255, 255, 255, 255, "White")
         when (fillerChoice) {
-            0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation, colour)
-            1 -> filler = FloodFillSerial(rs, tempAllocation, outputAllocation, dimensions, colour)
-            2 -> filler = FloodFillParallel(rs, tempAllocation, outputAllocation, dimensions, colour)
+            0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation, inputAllocation, colour)
+            1 -> filler = FloodFillSerial(rs, tempAllocation, outputAllocation, inputAllocation, dimensions, colour)
+            2 -> filler = FloodFillParallel(rs, tempAllocation, outputAllocation, inputAllocation, dimensions, colour)
         }
 
         filler.x = x

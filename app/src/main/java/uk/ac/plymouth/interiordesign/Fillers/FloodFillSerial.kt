@@ -13,6 +13,7 @@ class FloodFillSerial(
     rs : RenderScript,
     override var mInputAllocation: Allocation,
     override var mOutputAllocation: Allocation,
+    override var mOriginalAllocation: Allocation,
     private var dimensions: Size,
     override var colour: Colour
 ) : Filler  {
@@ -33,13 +34,16 @@ class FloodFillSerial(
     override fun run() {
         serialScript._imageH = dimensions.height
         serialScript._imageW = dimensions.width
-        dummyScript._gCurrentFrame = mInputAllocation
-        dummyScript.forEach_convertYToRGB(mOutputAllocation)
-        serialScript._colour = Short4(colour.r.toShort(), colour.g.toShort(),
-            colour.b.toShort(), colour.a.toShort()
-        )
-        serialScript._output = mOutputAllocation
-        serialScript._input = mInputAllocation
-        serialScript.invoke_serial_implementation(x, y, 0)
+        dummyScript._gCurrentFrame = mOriginalAllocation
+        dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
+        if (x != 0 && y != 0) {
+            serialScript._colour = Short4(
+                colour.r.toShort(), colour.g.toShort(),
+                colour.b.toShort(), colour.a.toShort()
+            )
+            serialScript._output = mOutputAllocation
+            serialScript._input = mInputAllocation
+            serialScript.invoke_serial_implementation(x, y, 0)
+        }
     }
 }

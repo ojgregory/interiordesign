@@ -7,6 +7,7 @@ import uk.ac.plymouth.interiordesign.Room.Colour
 interface Filler {
     var mInputAllocation: Allocation
     var mOutputAllocation: Allocation
+    var mOriginalAllocation: Allocation
     var colour: Colour
     var x : Int
     var y : Int

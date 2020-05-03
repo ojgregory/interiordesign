@@ -8,7 +8,9 @@ import uk.ac.plymouth.interiordesign.ScriptC_dummy
 class DummyFiller(
     rs : RenderScript,
     override var mInputAllocation: Allocation,
-    override var mOutputAllocation: Allocation, override var colour: Colour
+    override var mOutputAllocation: Allocation,
+    override var mOriginalAllocation: Allocation,
+    override var colour: Colour
 ) : Filler {
     private val dummyScript : ScriptC_dummy = ScriptC_dummy(rs)
     override var x: Int = 0
@@ -23,7 +25,7 @@ class DummyFiller(
         }
 
     override fun run() {
-        dummyScript._gCurrentFrame = mInputAllocation
-        dummyScript.forEach_convertYToRGB(mOutputAllocation)
+        dummyScript._gCurrentFrame = mOriginalAllocation
+        dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
     }
 }
