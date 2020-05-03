@@ -35,13 +35,16 @@ class FloodFillParallel(
         parallelScript._imageW = dimensions.width
         dummyScript._gCurrentFrame = mOriginalAllocation
         dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
-        parallelScript._input = mInputAllocation
-        parallelScript._output = mOutputAllocation
-        println(x)
-        println(y)
-        parallelScript._colour = Short4(colour.r.toShort(), colour.g.toShort(),
-            colour.b.toShort(), colour.a.toShort()
-        )
-        parallelScript.invoke_parallel_implementation(x, y, 0)
+        if (x != 0 && y != 0) {
+            parallelScript._input = mInputAllocation
+            parallelScript._output = mOutputAllocation
+            println(x)
+            println(y)
+            parallelScript._colour = Short4(
+                colour.r.toShort(), colour.g.toShort(),
+                colour.b.toShort(), colour.a.toShort()
+            )
+            parallelScript.invoke_parallel_implementation(x, y, 0)
+        }
     }
 }

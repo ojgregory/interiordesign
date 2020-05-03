@@ -36,11 +36,14 @@ class FloodFillSerial(
         serialScript._imageW = dimensions.width
         dummyScript._gCurrentFrame = mOriginalAllocation
         dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
-        serialScript._colour = Short4(colour.r.toShort(), colour.g.toShort(),
-            colour.b.toShort(), colour.a.toShort()
-        )
-        serialScript._output = mOutputAllocation
-        serialScript._input = mInputAllocation
-        serialScript.invoke_serial_implementation(x, y, 0)
+        if (x != 0 && y != 0) {
+            serialScript._colour = Short4(
+                colour.r.toShort(), colour.g.toShort(),
+                colour.b.toShort(), colour.a.toShort()
+            )
+            serialScript._output = mOutputAllocation
+            serialScript._input = mInputAllocation
+            serialScript.invoke_serial_implementation(x, y, 0)
+        }
     }
 }
