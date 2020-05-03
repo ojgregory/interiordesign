@@ -15,6 +15,7 @@
         android:text="0xffffffff"
         android:textAlignment="center"
         android:textColor="@android:color/black"
-        android:textSize="36sp" />
+        android:textSize="36sp"
+        android:fontFamily="monospace" />
 
 </LinearLayout>

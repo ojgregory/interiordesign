@@ -5,17 +5,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_colours.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import uk.ac.plymouth.interiordesign.Room.Colour
 import uk.ac.plymouth.interiordesign.ColourActivity
 import uk.ac.plymouth.interiordesign.ColourAdapter
 import uk.ac.plymouth.interiordesign.R
+import uk.ac.plymouth.interiordesign.Room.Colour
 import uk.ac.plymouth.interiordesign.Room.ColourDatabase
+
 
 class ColoursFragment : Fragment(), DataReturnInterface<Colour>{
     lateinit var colourReturnInterface: DataReturnInterface<Colour>
@@ -28,9 +29,18 @@ class ColoursFragment : Fragment(), DataReturnInterface<Colour>{
         return inflater.inflate(R.layout.fragment_colours, container, false)
     }
 
+    private val addColourButtonListener = object : View.OnClickListener {
+        override fun onClick(v: View?) {
+            // Create the fragment and show it as a dialog.
+            val newFragment = ColourPickerFragment.newInstance()
+            newFragment!!.show(parentFragmentManager, "dialog")
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val colourDao = ColourDatabase.getDatabase(requireContext()).colourDao()
+        fab.setOnClickListener(addColourButtonListener)
         GlobalScope.launch {
             if (colourDao.getAll().isEmpty()) {
                 colourDao.insert(

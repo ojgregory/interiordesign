@@ -5,14 +5,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentTransaction
 import kotlinx.android.synthetic.main.fragment_colour_picker.*
 import uk.ac.plymouth.interiordesign.R
 
 
-class ColourPickerFragment : Fragment() {
+class ColourPickerFragment : DialogFragment() {
     lateinit var colourFragment : ColourFragment
+
+    companion object {
+        private const val title = "Create a colour"
+        fun newInstance(): ColourPickerFragment? {
+            val colourPickerFragment = ColourPickerFragment()
+            val args = Bundle()
+            args.putString("title", title)
+            colourPickerFragment.setArguments(args)
+            return colourPickerFragment
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
