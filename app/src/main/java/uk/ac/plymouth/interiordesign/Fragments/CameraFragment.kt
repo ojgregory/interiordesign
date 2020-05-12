@@ -394,7 +394,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
             cameraWrapper = null
         }
 
-        processingCoordinator.closeAllocations()
+        processingCoordinator.closeAllocationsAndStop()
     }
 
     override fun onCreateView(
@@ -421,7 +421,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mRS = RenderScript.create(requireActivity())
+        mRS = RenderScript.create(requireContext().applicationContext)
         mUiHandler = Handler(Looper.getMainLooper())
     }
 
