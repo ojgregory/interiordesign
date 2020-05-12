@@ -10,7 +10,7 @@ import uk.ac.plymouth.interiordesign.ScriptC_dummy
 import uk.ac.plymouth.interiordesign.ScriptC_floodfill
 
 class FloodFillSerial(
-    rs : RenderScript,
+    var rs : RenderScript,
     override var mInputAllocation: Allocation,
     override var mOutputAllocation: Allocation,
     override var mOriginalAllocation: Allocation,
@@ -19,12 +19,12 @@ class FloodFillSerial(
 ) : Filler  {
     private val serialScript = ScriptC_floodfill(rs)
     private val dummyScript = ScriptC_dummy(rs)
-    override var x: Int = 5
+    override var x: Int = 0
         get() = field
         set(value) {
             field = value
         }
-    override var y: Int = 5
+    override var y: Int = 0
         get() = field
         set(value) {
             field = value

@@ -1,8 +1,6 @@
 package uk.ac.plymouth.interiordesign.Fillers
 
-import android.renderscript.Allocation
-import android.renderscript.RenderScript
-import android.renderscript.Short4
+import android.renderscript.*
 import android.util.Size
 import uk.ac.plymouth.interiordesign.Room.Colour
 import uk.ac.plymouth.interiordesign.ScriptC_dummy
@@ -18,16 +16,19 @@ class FloodFillParallel(
 ) : Filler  {
     private val parallelScript = ScriptC_floodfill(rs)
     private val dummyScript = ScriptC_dummy(rs)
-    override var x: Int = 5
+    //private val isProcessed = Allocation.createTyped(rs, Type.createXY(rs, Element.U8(rs), dimensions.width, dimensions.height))
+    override var x: Int = 0
         get() = field
         set(value) {
             field = value
         }
-    override var y: Int = 5
+    override var y: Int = 0
         get() = field
         set(value) {
             field = value
         }
+
+
 
 
     override fun run() {
@@ -38,8 +39,6 @@ class FloodFillParallel(
         if (x != 0 && y != 0) {
             parallelScript._input = mInputAllocation
             parallelScript._output = mOutputAllocation
-            println(x)
-            println(y)
             parallelScript._colour = Short4(
                 colour.r.toShort(), colour.g.toShort(),
                 colour.b.toShort(), colour.a.toShort()
