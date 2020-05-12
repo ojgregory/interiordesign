@@ -15,7 +15,7 @@ import uk.ac.plymouth.interiordesign.Room.Colour
 class ProcessingCoordinator(
     preProcessorChoice: Int,
     processorChoice: Int,
-    fillerChoice : Int,
+    fillerChoice: Int,
     private val rs: RenderScript,
     private val dimensions: Size
 ) {
@@ -29,6 +29,7 @@ class ProcessingCoordinator(
     private var processingHandler: Handler
     private var processingTask: ProcessingTask
     private lateinit var colour: Colour
+    val processingThread = HandlerThread("ProcessingCoordinator")
 
     init {
         val yuvTypeBuilder = Type.Builder(
@@ -68,7 +69,6 @@ class ProcessingCoordinator(
         chooseProcessor(processorChoice)
         chooseFiller(fillerChoice)
 
-        val processingThread = HandlerThread("ProcessingCoordinator")
         processingThread.start()
         processingHandler = Handler(processingThread.looper)
 
@@ -91,27 +91,38 @@ class ProcessingCoordinator(
         private var outputAllocation: Allocation
     ) : Runnable, Allocation.OnBufferAvailableListener {
         override fun run() {
-            var pendingFrames: Int
-            synchronized(this) {
-                pendingFrames = mPendingFrames
-                mPendingFrames = 0
-                // Discard extra messages in case processing is slower than frame rate
-                mProcessingHandler.removeCallbacks(this)
-            }
-            // Get to newest input
-            for (i in 0 until pendingFrames) {
-                inputAllocation.ioReceive()
-            }
+            if (!stopped) {
+                var pendingFrames: Int
+                synchronized(this) {
+                    pendingFrames = mPendingFrames
+                    mPendingFrames = 0
+                    // Discard extra messages in case processing is slower than frame rate
+                    mProcessingHandler.removeCallbacks(this)
+                }
+                // Get to newest input
+                for (i in 0 until pendingFrames) {
+                    inputAllocation.ioReceive()
+                }
 
-            preProcessor.run()
-            processor.run()
-            filler.run()
-            outputAllocation.ioSend()
+                try {
+                    preProcessor.run()
+                    processor.run()
+                    filler.run()
+                } catch (e: RSIllegalArgumentException) {
+                    e.printStackTrace()
+                }
+                outputAllocation.ioSend()
+            }
+        }
+
+        fun stop() {
+            stopped = true
         }
 
         var processor = processor
         var preProcessor = preProcessor
         var filler = filler
+        var stopped: Boolean = false
 
         private var mPendingFrames = 0
         override fun onBufferAvailable(a: Allocation?) {
@@ -139,12 +150,12 @@ class ProcessingCoordinator(
         when (processorChoice) {
             0 -> processor = DummyProcessor(rs, preProcessedAllocation, tempAllocation)
             1 -> if (::processor.isInitialized && processor is SobelProcessor)
-                    (processor as SobelProcessor).changeOperators(0)
-                 else {
-                  processor =
-                        SobelProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
-                    (processor as SobelProcessor).changeOperators(0)
-                 }
+                (processor as SobelProcessor).changeOperators(0)
+            else {
+                processor =
+                    SobelProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
+                (processor as SobelProcessor).changeOperators(0)
+            }
             2 -> {
                 if (::processor.isInitialized && processor is SobelProcessor)
                     (processor as SobelProcessor).changeOperators(1)
@@ -155,19 +166,28 @@ class ProcessingCoordinator(
                 }
             }
             3 -> {
-                if (::processor.isInitialized && processor !is RobertsCrossProcessor)
                     processor =
-                        RobertsCrossProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
+                        RobertsCrossProcessor(
+                            rs,
+                            dimensions,
+                            preProcessedAllocation,
+                            tempAllocation
+                        )
             }
             4 -> {
-                if (::processor.isInitialized && processor !is PrewittProcessor)
                     processor =
                         PrewittProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
             }
             5 -> {
-                if (::processor.isInitialized && processor !is CannyProcessor)
                     processor =
-                        CannyProcessor(rs, dimensions, preProcessedAllocation, tempAllocation, 21, 10)
+                        CannyProcessor(
+                            rs,
+                            dimensions,
+                            preProcessedAllocation,
+                            tempAllocation,
+                            21,
+                            10
+                        )
             }
         }
         processingTask?.processor = processor
@@ -184,8 +204,22 @@ class ProcessingCoordinator(
             colour = Colour(255, 255, 255, 255, "White")
         when (fillerChoice) {
             0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation, inputAllocation, colour)
-            1 -> filler = FloodFillSerial(rs, tempAllocation, outputAllocation, inputAllocation, dimensions, colour)
-            2 -> filler = FloodFillParallel(rs, tempAllocation, outputAllocation, inputAllocation, dimensions, colour)
+            1 -> filler = FloodFillSerial(
+                rs,
+                tempAllocation,
+                outputAllocation,
+                inputAllocation,
+                dimensions,
+                colour
+            )
+            2 -> filler = FloodFillParallel(
+                rs,
+                tempAllocation,
+                outputAllocation,
+                inputAllocation,
+                dimensions,
+                colour
+            )
         }
 
         filler.x = x
@@ -195,7 +229,7 @@ class ProcessingCoordinator(
             processingTask.filler = filler
     }
 
-    fun setFillerXandY(x : Int, y: Int) {
+    fun setFillerXandY(x: Int, y: Int) {
         filler.x = x
         filler.y = y
     }
@@ -222,24 +256,26 @@ class ProcessingCoordinator(
             processingTask.preProcessor = preProcessor
     }
 
-    fun setGaussianMaskSize(size : Int) {
+    fun setGaussianMaskSize(size: Int) {
         if (preProcessor is GaussianProcessor) {
             (preProcessor as GaussianProcessor).maskSize = size
             (preProcessor as GaussianProcessor).recalculateGaussianKernel()
         }
     }
 
-    fun setGaussianSigma(sigma : Double) {
+    fun setGaussianSigma(sigma: Double) {
         if (preProcessor is GaussianProcessor) {
             (preProcessor as GaussianProcessor).sigma = sigma
             (preProcessor as GaussianProcessor).recalculateGaussianKernel()
         }
     }
 
-    fun closeAllocations() {
+    fun closeAllocationsAndStop() {
         inputAllocation.destroy()
         outputAllocation.destroy()
         tempAllocation.destroy()
+        processingHandler.removeCallbacks(processingTask)
+        processingTask.stop()
     }
 
     fun setColour(c: Colour) {
