@@ -11,6 +11,7 @@ import uk.ac.plymouth.interiordesign.Fillers.Filler
 import uk.ac.plymouth.interiordesign.Fillers.FloodFillParallel
 import uk.ac.plymouth.interiordesign.Fillers.FloodFillSerial
 import uk.ac.plymouth.interiordesign.Room.Colour
+import java.lang.NullPointerException
 
 class ProcessingCoordinator(
     preProcessorChoice: Int,
@@ -99,19 +100,26 @@ class ProcessingCoordinator(
                     // Discard extra messages in case processing is slower than frame rate
                     mProcessingHandler.removeCallbacks(this)
                 }
-                // Get to newest input
-                for (i in 0 until pendingFrames) {
-                    inputAllocation.ioReceive()
-                }
 
+                //Only crashes if the allocations have been cleared which means that
+                // the task should stop, for example activity change
                 try {
+                    // Get to newest input
+                    for (i in 0 until pendingFrames) {
+                        inputAllocation.ioReceive()
+                    }
+
                     preProcessor.run()
                     processor.run()
                     filler.run()
+                    outputAllocation.ioSend()
                 } catch (e: RSIllegalArgumentException) {
                     e.printStackTrace()
+                    stopped = true
+                } catch (e: NullPointerException) {
+                    e.printStackTrace()
+                    stopped = true
                 }
-                outputAllocation.ioSend()
             }
         }
 
@@ -166,28 +174,28 @@ class ProcessingCoordinator(
                 }
             }
             3 -> {
-                    processor =
-                        RobertsCrossProcessor(
-                            rs,
-                            dimensions,
-                            preProcessedAllocation,
-                            tempAllocation
-                        )
+                processor =
+                    RobertsCrossProcessor(
+                        rs,
+                        dimensions,
+                        preProcessedAllocation,
+                        tempAllocation
+                    )
             }
             4 -> {
-                    processor =
-                        PrewittProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
+                processor =
+                    PrewittProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
             }
             5 -> {
-                    processor =
-                        CannyProcessor(
-                            rs,
-                            dimensions,
-                            preProcessedAllocation,
-                            tempAllocation,
-                            21,
-                            10
-                        )
+                processor =
+                    CannyProcessor(
+                        rs,
+                        dimensions,
+                        preProcessedAllocation,
+                        tempAllocation,
+                        21,
+                        10
+                    )
             }
         }
         processingTask?.processor = processor
