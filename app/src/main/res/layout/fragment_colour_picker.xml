@@ -1,37 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="1000dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_centerHorizontal="true"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <TextView
-        android:text="R"
-        android:id="@+id/labelR"
-        android:layout_width="wrap_content"
+    <EditText
+        android:layout_width="255dp"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toStartOf="@id/seekBarR"
-        app:layout_constraintTop_toTopOf="parent"/>
-    <SeekBar
-        android:id="@+id/seekBarR"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toEndOf="@id/labelR"
-        app:layout_constraintTop_toTopOf="parent"
-        android:max="255"
-        android:progress="255"/>
+        android:id="@+id/colourNameInput"
+        android:hint="@string/input_colour_name" />
 
     <TextView
-        android:text="G"
-        android:id="@+id/labelG"
+        android:id="@+id/labelR"
+        android:text="@string/red"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="8dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+    <SeekBar
+        android:id="@+id/seekBarR"
+        android:layout_width="255dp"
+        android:layout_height="wrap_content"
+        android:max="255"
+        android:progress="255"
+        android:indeterminate="false"
+        app:layout_constraintStart_toEndOf="@id/labelR"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/labelG"
+        android:text="@string/green"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="50dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         app:layout_constraintEnd_toStartOf="@id/seekBarG"
-        app:layout_constraintTop_toBottomOf="@id/seekBarR"
-        />
+        app:layout_constraintTop_toBottomOf="@id/seekBarR" />
     <SeekBar
         android:id="@+id/seekBarG"
-        android:layout_width="match_parent"
+        android:layout_width="255dp"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toEndOf="@id/labelG"
         app:layout_constraintTop_toBottomOf="@id/seekBarR"
@@ -39,30 +51,35 @@
         android:max="255"/>
 
     <TextView
-        android:text="B"
         android:id="@+id/labelB"
+        android:text="@string/blue"
+        android:layout_marginStart="50dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         app:layout_constraintEnd_toStartOf="@id/seekBarB"
-        app:layout_constraintTop_toBottomOf="@id/seekBarG"/>
+        app:layout_constraintTop_toBottomOf="@id/seekBarG" />
     <SeekBar
         android:id="@+id/seekBarB"
-        android:layout_width="match_parent"
+        android:layout_width="255dp"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toEndOf="@id/labelB"
         app:layout_constraintTop_toBottomOf="@id/seekBarG"
         android:progress="255"
         android:max="255"/>
+
     <TextView
-        android:text="A"
         android:id="@+id/labelA"
+        android:text="@string/alpha"
+        android:layout_marginStart="50dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         app:layout_constraintEnd_toStartOf="@id/seekBarA"
-        app:layout_constraintTop_toBottomOf="@id/seekBarB"/>
+        app:layout_constraintTop_toBottomOf="@id/seekBarB" />
     <SeekBar
         android:id="@+id/seekBarA"
-        android:layout_width="match_parent"
+        android:layout_width="255dp"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toEndOf="@id/labelA"
         app:layout_constraintTop_toBottomOf="@id/seekBarB"
@@ -77,4 +94,11 @@
         android:layout_height="wrap_content">
     </FrameLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/createColour"
+        android:text="@string/create_colour"
+        />
+
+</LinearLayout>

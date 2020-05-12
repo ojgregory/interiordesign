@@ -3,4 +3,10 @@
 
     <string name="camera_request_rationale">This app needs the camera permission to function</string>
     <string name="GaussianButton">Set Gaussian Config</string>
+    <string name="create_colour">Create colour</string>
+    <string name="alpha">Alpha</string>
+    <string name="blue">Blue</string>
+    <string name="green">Green</string>
+    <string name="red">Red</string>
+    <string name="input_colour_name">Input colour name</string>
 </resources>

@@ -5,14 +5,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentTransaction
 import kotlinx.android.synthetic.main.fragment_colour_picker.*
 import uk.ac.plymouth.interiordesign.R
+import uk.ac.plymouth.interiordesign.Room.Colour
 
 
-class ColourPickerFragment : Fragment() {
+class ColourPickerFragment : DialogFragment() {
     lateinit var colourFragment : ColourFragment
+
+    companion object {
+        private const val title = "Create a colour"
+        fun newInstance(): ColourPickerFragment? {
+            val colourPickerFragment = ColourPickerFragment()
+            val args = Bundle()
+            args.putString("title", title)
+            colourPickerFragment.setArguments(args)
+            return colourPickerFragment
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -30,6 +43,7 @@ class ColourPickerFragment : Fragment() {
         seekBarR.setOnSeekBarChangeListener(seekBarListener)
         seekBarG.setOnSeekBarChangeListener(seekBarListener)
         seekBarB.setOnSeekBarChangeListener(seekBarListener)
+        createColour.setOnClickListener(createColourListener)
     }
 
     private val seekBarListener = object : SeekBar.OnSeekBarChangeListener {
@@ -59,6 +73,28 @@ class ColourPickerFragment : Fragment() {
         override fun onStopTrackingTouch(seekBar: SeekBar?) {
         }
 
+    }
+
+    private val createColourListener = object : View.OnClickListener {
+        override fun onClick(v: View?) {
+            val name = colourNameInput.text.toString()
+            val r = seekBarR.progress
+            val g = seekBarG.progress
+            val b = seekBarB.progress
+            val a = seekBarA.progress
+
+            val colour = Colour(r, g, b, a, name)
+            sendColour(colour)
+        }
+
+    }
+
+    fun sendColour(data : Colour) {
+        // Notice the use of `getTargetFragment` which will be set when the dialog is displayed
+        // Notice the use of `getTargetFragment` which will be set when the dialog is displayed
+        val listener = targetFragment as DataReturnInterface<Colour>?
+        listener!!.returnData(data)
+        dismiss()
     }
 
 }
