@@ -57,14 +57,15 @@ static void resize_length(Queue* queue, int q_length) {
 }
 
 static void push(Queue* queue, uint2 vertex) {
-    if (queue->size == queue->q_length - 1) {
+    if (queue->size >= queue->q_length - 1 || queue->rear >= queue->q_length - 1) {
         resize(queue);
     }
 
-    if (queue->rear >= 0 && queue->rear < queue->q_length)
+    if (queue->rear >= 0 && queue->rear < queue->q_length) {
         rsSetElementAt_uint2(queue->array, vertex, queue->rear);
-    queue->rear++;
-    queue->size++;
+        queue->rear++;
+        queue->size++;
+    }
 }
 
 static uint2 pop(Queue* queue) {
@@ -72,10 +73,6 @@ static uint2 pop(Queue* queue) {
     queue->front++;
     if (queue->front-1 >= 0 && queue->front-1 < queue->q_length)
         return rsGetElementAt_uint2(queue->array, queue->front-1);
-//    if (queue->front == queue->q_length && queue->rear != 0)
-            //queue->front = 0;
-  //  else if (queue->front == queue->q_length)
-        //resize(queue);
 }
 
 static bool isEmpty(Queue* queue) {
@@ -123,36 +120,28 @@ void RS_KERNEL processNextQ() {
         rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) == target_colour
     )
     {
-        //rsDebug("west", rsGetElementAt_uchar(isProcessed,target_x-1, target_y));
         push(&nextQ, (uint2){n.x-1, n.y});
-        //rsSetElementAt_uchar(isProcessed, 1, n.x-1, n.y);
     }
     
     if (
     rsGetElementAtYuv_uchar_Y(input, n.x+1, n.y) == target_colour
     )
     {
-        //rsDebug("east", rsGetElementAt_uchar(isProcessed,target_x+1, target_y));
         push(&nextQ, (uint2){n.x+1, n.y});
-        //rsSetElementAt_uchar(isProcessed, 1, n.x+1, n.y);
     }
 
     if (
     rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) == target_colour
     )
     {
-        //rsDebug("north", rsGetElementAt_uchar(isProcessed,target_x, target_y-1));
         push(&nextQ, (uint2){n.x, n.y-1});
-        //rsSetElementAt_uchar(isProcessed, 1, n.x, n.y-1);
     }
 
     if (
     rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) == target_colour
     )
     {
-        //rsDebug("south", rsGetElementAt_uchar(isProcessed,target_x, target_y+1));
         push(&nextQ, (uint2){n.x, n.y+1});
-        //rsSetElementAt_uchar(isProcessed, 1, n.x, n.y+1);
     }
 }
 
@@ -201,8 +190,6 @@ void serial_implementation_while(int target_x, int target_y, int replacement_col
     isProcessed = rsCreateAllocation_uchar(imageW, imageH);
     create_queue(&currentQ);
     push(&currentQ, (uint2){target_x, target_y});
-    upperBound = target_colour + fuzzy;
-    lowerBound = target_colour - fuzzy;
     while (!isEmpty(&currentQ)) {
         n = pop(&currentQ);
         if (rsGetElementAt_uchar(isProcessed,n.x, n.y) == 1 || n.x <= 0 || n.x >= imageW-1 || n.y <= 0 || n.y >= imageH-1)
@@ -211,23 +198,17 @@ void serial_implementation_while(int target_x, int target_y, int replacement_col
         rsSetElementAt_uchar(isProcessed, 1, n.x, n.y);
 
         if (
-        //rsGetElementAt_uchar(isProcessed,n.x-1, n.y) != 1 &&
         rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) == target_colour
         )
         {
-            //rsDebug("west", rsGetElementAt_uchar(isProcessed,target_x-1, target_y));
             push(&currentQ, (uint2){n.x-1, n.y});
-            //rsSetElementAt_uchar(isProcessed, 1, n.x-1, n.y);
         }
 
         if (
-        //rsGetElementAt_uchar(isProcessed,n.x+1, n.y) != 1 &&
         rsGetElementAtYuv_uchar_Y(input, n.x+1, n.y) == target_colour
         )
         {
-            //rsDebug("east", rsGetElementAt_uchar(isProcessed,target_x+1, target_y));
             push(&currentQ, (uint2){n.x+1, n.y});
-            //rsSetElementAt_uchar(isProcessed, 1, n.x+1, n.y);
         }
 
         if (
@@ -235,33 +216,16 @@ void serial_implementation_while(int target_x, int target_y, int replacement_col
         rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) == target_colour
         )
         {
-            //rsDebug("north", rsGetElementAt_uchar(isProcessed,target_x, target_y-1));
             push(&currentQ, (uint2){n.x, n.y-1});
-            //rsSetElementAt_uchar(isProcessed, 1, n.x, n.y-1);
         }
 
         if (
-        //rsGetElementAt_uchar(isProcessed,n.x, n.y+1) != 1 &&
         rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) == target_colour
         )
         {
-            //rsDebug("south", rsGetElementAt_uchar(isProcessed,target_x, target_y+1));
             push(&currentQ, (uint2){n.x, n.y+1});
-            //rsSetElementAt_uchar(isProcessed, 1, n.x, n.y+1);
         }
-        //printQueue(nextQ);
-        //copyQueue(&currentQ, &nextQ);
-        //checkQueue(nextQ,currentQ);
-        //resetQueue(&nextQ);
-        //rsDebug("size", currentQ.size);
     };
-    //rsDebug("size", currentQ.size);
-    //rsDebug("north", rsGetElementAt_uchar(isProcessed,target_x, target_y-1));
-    //rsDebug("south", rsGetElementAt_uchar(isProcessed,target_x, target_y+1));
-    //rsDebug("west", rsGetElementAt_uchar(isProcessed,target_x-1, target_y));
-    //rsDebug("east", rsGetElementAt_uchar(isProcessed,target_x+1, target_y));
-    //rsDebug("rear", currentQ.rear);
-    //rsDebug("return", 1);
 }
 
 void serial_implementation(int target_x, int target_y, int replacement_colour) {

@@ -6,10 +6,7 @@ import android.os.HandlerThread
 import android.renderscript.*
 import android.util.Size
 import android.view.Surface
-import uk.ac.plymouth.interiordesign.Fillers.DummyFiller
-import uk.ac.plymouth.interiordesign.Fillers.Filler
-import uk.ac.plymouth.interiordesign.Fillers.FloodFillParallel
-import uk.ac.plymouth.interiordesign.Fillers.FloodFillSerial
+import uk.ac.plymouth.interiordesign.Fillers.*
 import uk.ac.plymouth.interiordesign.Room.Colour
 import java.lang.NullPointerException
 
@@ -220,7 +217,15 @@ class ProcessingCoordinator(
                 dimensions,
                 colour
             )
-            2 -> filler = FloodFillParallel(
+            2 -> filler = FloodFillSerialAlt(
+                rs,
+                tempAllocation,
+                outputAllocation,
+                inputAllocation,
+                dimensions,
+                colour
+            )
+            3 -> filler = FloodFillParallel(
                 rs,
                 tempAllocation,
                 outputAllocation,

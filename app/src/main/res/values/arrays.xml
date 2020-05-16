@@ -34,12 +34,14 @@
     </string-array>
     <string-array name="settings_fillers_titles">
         <item>None</item>
-        <item>Serial Flood Fill</item>
+        <item>Serial Flood Fill - Frontier Swapping</item>
+        <item>Serial Flood Fill - Single Queue</item>
         <item>Parallel Flood Fill</item>
     </string-array>
     <string-array name="settings_fillers_values">
         <item>0</item>
         <item>1</item>
         <item>2</item>
+        <item>3</item>
     </string-array>
 </resources>
