@@ -29,5 +29,82 @@ abstract class ColourDatabase : RoomDatabase() {
                 return instance
             }
         }
+
+        // Fill Database with values if none are present
+        suspend fun fillColourDB(context: Context) {
+            val colourDao = getDatabase(context).colourDao()
+            colourDao.insert(
+                Colour(
+                    255,
+                    0,
+                    0,
+                    255,
+                    "RED"
+                )
+            )
+            colourDao.insert(
+                Colour(
+                    0,
+                    255,
+                    0,
+                    255,
+                    "GREEN"
+                )
+            )
+            colourDao.insert(
+                Colour(
+                    0,
+                    0,
+                    255,
+                    255,
+                    "BLUE"
+                )
+            )
+            colourDao.insert(
+                Colour(
+                    255,
+                    255,
+                    0,
+                    255,
+                    "YELLOW"
+                )
+            )
+            colourDao.insert(
+                Colour(
+                    255,
+                    0,
+                    255,
+                    255,
+                    "MAGENTA"
+                )
+            )
+            colourDao.insert(
+                Colour(
+                    0,
+                    255,
+                    255,
+                    255,
+                    "CYAN"
+                )
+            )
+            colourDao.insert(
+                Colour(
+                    255,
+                    255,
+                    255,
+                    255,
+                    "WHITE"
+                )
+            )
+            colourDao.insert(
+                Colour(
+                    0,
+                    0,
+                    0,
+                    255,
+                    "BLACK"
+                )
+            )
+        }
     }
 }

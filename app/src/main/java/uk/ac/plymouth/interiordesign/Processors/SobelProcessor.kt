@@ -6,7 +6,8 @@ import android.renderscript.RenderScript
 import android.util.Size
 import uk.ac.plymouth.interiordesign.ScriptC_sobel
 
-
+// Use either sobel or scharr operator
+// Convolve with input
 class SobelProcessor(
     rs: RenderScript, private val dimensions: Size,
     override var mInputAllocation: Allocation,
@@ -30,7 +31,6 @@ class SobelProcessor(
 
     fun changeOperators(selectedOperator : Int) {
         sobelOperatorProvider.selectedOperator = selectedOperator
-        var operatorX = sobelOperatorProvider.getOperatorX()
         mOperatorAllocationX.copyFrom(sobelOperatorProvider.getOperatorX())
         mOperatorAllocationY.copyFrom(sobelOperatorProvider.getOperatorY())
     }

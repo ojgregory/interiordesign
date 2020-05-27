@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 
+// Wraps queries with kotlin class and annotation
 @Dao
 interface ColourDao {
     @Query("SELECT * FROM colour")

@@ -6,6 +6,8 @@ import android.renderscript.RenderScript
 import android.util.Size
 import uk.ac.plymouth.interiordesign.ScriptC_sobel
 
+// Apply Prewitt Edge Detection, using generic convolution
+// Based on Sobel implementation
 class RobertsCrossProcessor(
     rs: RenderScript, private val dimensions: Size,
     override var mInputAllocation: Allocation,

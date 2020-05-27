@@ -23,6 +23,8 @@ int *convYMask;
 int highThreshold;
 int lowThreshold;
 
+// Similar to implementation present in Sobel
+// Saves both the Gx and Gy values for future use and saves the gradient direction
 float2 __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
   uchar newPixel;
 
@@ -59,6 +61,7 @@ float2 __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
   return outputPixel;
 }
 
+// Non maximal edges are suppressed so only the strongest edges remain
 float2 __attribute__((kernel)) supression(uint32_t x, uint32_t y) {
   uchar pixel = 0;
   float theta;
@@ -77,6 +80,7 @@ float2 __attribute__((kernel)) supression(uint32_t x, uint32_t y) {
 
     yTop[0] = rsGetElementAt_float2(input, x, y - 1).x;
     yTop[1] = rsGetElementAt_float2(input, x - 1, y - 1).x;
+
     x_est = fabs(rsGetElementAt_float(Gy, x, y) / pixel);
 
     if ((pixel >= ((yBot[1] - yBot[0]) * x_est + yBot[0]) &&
@@ -90,8 +94,10 @@ float2 __attribute__((kernel)) supression(uint32_t x, uint32_t y) {
   } else if ((theta > 45 && theta <= 90) || (theta < -90 && theta >= -135)) {
     yBot[0] = rsGetElementAt_float2(input, x + 1, y).x;
     yBot[1] = rsGetElementAt_float2(input, x + 1, y - 1).x;
+
     yTop[0] = rsGetElementAt_float2(input, x - 1, y).x;
     yTop[1] = rsGetElementAt_float2(input, x - 1, y - 1).x;
+
     x_est = fabs(rsGetElementAt_float(Gx, x, y) / pixel);
 
     if (pixel >= ((yBot[1] - yBot[0]) * x_est + yBot[0]) &&
@@ -140,6 +146,7 @@ float2 __attribute__((kernel)) supression(uint32_t x, uint32_t y) {
   return outputPixel;
 }
 
+// Categorises pixels into Strong/Weak if below weak the value becomes 0
 float2 __attribute__((kernel)) doubleThreshold(uint32_t x, uint32_t y) {
   uchar pixel = 0;
   float theta;
@@ -159,6 +166,8 @@ float2 __attribute__((kernel)) doubleThreshold(uint32_t x, uint32_t y) {
   return outputPixel;
 }
 
+// Asseses  weak edges to see whether they should survive and become STRONG
+// Or whether they shoud be culled
 uchar __attribute__((kernel)) hystersis(uint32_t x, uint32_t y) {
   uchar pixel = 0;
   float theta;
@@ -196,6 +205,7 @@ uchar __attribute__((kernel)) hystersis(uint32_t x, uint32_t y) {
         return 255;
     }
   }
+  return 0;
 }
 
 void calculateCanny(rs_allocation output_image) {

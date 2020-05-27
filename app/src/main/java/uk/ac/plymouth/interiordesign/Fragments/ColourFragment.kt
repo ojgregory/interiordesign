@@ -18,17 +18,15 @@ class ColourFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_colour, container, false)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-    }
-
+    // Change colour applies name, colour and changes text colour
+    // to be visible
     fun changeColour(a: Int, r: Int, g: Int, b : Int) {
-        //Build and show the new color
+        //Show the color needs to be in specific format
         colourTextView.setBackgroundColor(Color.argb(a,r,g,b));
-        //show the color value
+        //show the color value, with hex conventions
         colourTextView.text = ("0x"+String.format("%02x", a)+String.format("%02x", r)
                 +String.format("%02x", g)+String.format("%02x", b));
-        //some math so text shows (needs improvement for greys)
+        // Ensure text is visible
         colourTextView.setTextColor(Color.argb(0xff,255-r,255-g,255-b));
     }
 }

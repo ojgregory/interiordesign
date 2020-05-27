@@ -7,7 +7,9 @@ import android.renderscript.Type
 import android.util.Size
 import uk.ac.plymouth.interiordesign.ScriptC_canny
 
-
+// Invokes sobel edge detection and canny algorithm
+// The code doesn't crash but the output only sometimes
+// shows and normally for only a few seconds
 class CannyProcessor(
     rs: RenderScript, private val dimensions: Size,
     override var mInputAllocation: Allocation,

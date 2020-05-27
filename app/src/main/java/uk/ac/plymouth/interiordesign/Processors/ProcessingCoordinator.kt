@@ -6,13 +6,16 @@ import android.os.HandlerThread
 import android.renderscript.*
 import android.util.Size
 import android.view.Surface
-import uk.ac.plymouth.interiordesign.Fillers.DummyFiller
-import uk.ac.plymouth.interiordesign.Fillers.Filler
+import androidx.preference.PreferenceManager
+import uk.ac.plymouth.interiordesign.Fillers.*
+import uk.ac.plymouth.interiordesign.Room.Colour
+import java.lang.NullPointerException
 
+// Organise the edge detection, blurring and filling algorithms
 class ProcessingCoordinator(
     preProcessorChoice: Int,
     processorChoice: Int,
-    fillerChoice : Int,
+    fillerChoice: Int,
     private val rs: RenderScript,
     private val dimensions: Size
 ) {
@@ -25,8 +28,13 @@ class ProcessingCoordinator(
     private var preProcessedAllocation: Allocation
     private var processingHandler: Handler
     private var processingTask: ProcessingTask
+    private lateinit var colour: Colour
+    val processingThread = HandlerThread("ProcessingCoordinator")
+    val prefs = PreferenceManager.getDefaultSharedPreferences(rs.applicationContext)
+    val showFacade = prefs.getBoolean("facade_check", true)
 
     init {
+        // Initialise shared allocations
         val yuvTypeBuilder = Type.Builder(
             rs, Element.createPixel(
                 rs,
@@ -60,14 +68,15 @@ class ProcessingCoordinator(
         )
 
 
+        // Initialise preProcessor, processor, and filler based on choices
         choosePreProcessor(preProcessorChoice)
         chooseProcessor(processorChoice)
         chooseFiller(fillerChoice)
 
-        val processingThread = HandlerThread("ProcessingCoordinator")
         processingThread.start()
         processingHandler = Handler(processingThread.looper)
 
+        // Launch processing task
         processingTask = ProcessingTask(
             processor,
             preProcessor,
@@ -87,27 +96,47 @@ class ProcessingCoordinator(
         private var outputAllocation: Allocation
     ) : Runnable, Allocation.OnBufferAvailableListener {
         override fun run() {
-            var pendingFrames: Int
-            synchronized(this) {
-                pendingFrames = mPendingFrames
-                mPendingFrames = 0
-                // Discard extra messages in case processing is slower than frame rate
-                mProcessingHandler.removeCallbacks(this)
-            }
-            // Get to newest input
-            for (i in 0 until pendingFrames) {
-                inputAllocation.ioReceive()
-            }
+            if (!stopped) {
+                var pendingFrames: Int
+                synchronized(this) {
+                    pendingFrames = mPendingFrames
+                    mPendingFrames = 0
+                    // Discard extra messages in case processing is slower than frame rate
+                    mProcessingHandler.removeCallbacks(this)
+                }
 
-            preProcessor.run()
-            processor.run()
-            filler.run()
-            outputAllocation.ioSend()
+                //Only crashes if the allocations have been cleared which means that
+                // the task should stop, for example activity change
+                try {
+                    // Get to newest input
+                    for (i in 0 until pendingFrames) {
+                        inputAllocation.ioReceive()
+                    }
+
+                    // Run the algorithms in correct order
+                    // If any are dummy then they apply no processing
+                    preProcessor.run()
+                    processor.run()
+                    filler.run()
+                    outputAllocation.ioSend()
+                } catch (e: RSIllegalArgumentException) {
+                    e.printStackTrace()
+                    stopped = true
+                } catch (e: NullPointerException) {
+                    e.printStackTrace()
+                    stopped = true
+                }
+            }
+        }
+
+        fun stop() {
+            stopped = true
         }
 
         var processor = processor
         var preProcessor = preProcessor
         var filler = filler
+        var stopped: Boolean = false
 
         private var mPendingFrames = 0
         override fun onBufferAvailable(a: Allocation?) {
@@ -131,18 +160,22 @@ class ProcessingCoordinator(
         return inputAllocation.surface
     }
 
-    fun chooseProcessor(processorChoice: Int) {
+    private fun chooseProcessor(processorChoice: Int) {
         when (processorChoice) {
             0 -> processor = DummyProcessor(rs, preProcessedAllocation, tempAllocation)
-            1 -> if (::processor.isInitialized && processor is SobelProcessor)
+            1 -> {
+                // Sobel and Scharr share class so change operator to sobel(0)
+                if (::processor.isInitialized && processor is SobelProcessor)
                     (processor as SobelProcessor).changeOperators(0)
-                 else {
-                  processor =
+                else {
+                    processor =
                         SobelProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
                     (processor as SobelProcessor).changeOperators(0)
-                 }
+                }
+            }
             2 -> {
-                if (processor is SobelProcessor)
+                // Sobel and Scharr share class so change operator to scharr(1)
+                if (::processor.isInitialized && processor is SobelProcessor)
                     (processor as SobelProcessor).changeOperators(1)
                 else {
                     processor =
@@ -151,30 +184,122 @@ class ProcessingCoordinator(
                 }
             }
             3 -> {
-                if (!(processor is RobertsCrossProcessor))
-                    processor =
-                        RobertsCrossProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
+                processor =
+                    RobertsCrossProcessor(
+                        rs,
+                        dimensions,
+                        preProcessedAllocation,
+                        tempAllocation
+                    )
             }
             4 -> {
-                if (!(processor is PrewittProcessor))
-                    processor =
-                        PrewittProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
+                processor =
+                    PrewittProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
             }
             5 -> {
-                if (processor !is CannyProcessor)
-                    processor =
-                        CannyProcessor(rs, dimensions, preProcessedAllocation, tempAllocation, 21, 10)
+                processor =
+                    CannyProcessor(
+                        rs,
+                        dimensions,
+                        preProcessedAllocation,
+                        tempAllocation,
+                        21,
+                        10
+                    )
             }
         }
+
+        // Processing task may not be initialised yet
         processingTask?.processor = processor
     }
 
     fun chooseFiller(fillerChoice: Int) {
-        when (fillerChoice) {
-            0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation)
+        var x = 0
+        var y = 0
+        if (::filler.isInitialized) {
+            x = filler.x
+            y = filler.y
         }
-        if (processingTask != null)
-            processingTask.filler = filler
+        // Set default colour if none present
+        if (!::colour.isInitialized)
+            colour = Colour(255, 255, 255, 255, "White")
+        when (fillerChoice) {
+            0 -> if (showFacade)
+                filler = DummyFiller(rs, tempAllocation, outputAllocation, inputAllocation, colour, showColour = true)
+            else
+                filler = DummyFiller(rs, tempAllocation, outputAllocation, tempAllocation, colour, showColour = false)
+            1 -> if (showFacade)
+                filler = FloodFillSerial(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    inputAllocation,
+                    dimensions,
+                    colour,
+                    showColour = true
+                )
+            else
+                filler = FloodFillSerial(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    tempAllocation,
+                    dimensions,
+                    colour,
+                    showColour = false
+                )
+            2 -> if (showFacade)
+                filler = FloodFillSerialAlt(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    inputAllocation,
+                    dimensions,
+                    colour,
+                    showColour = true
+                )
+            else
+                filler = FloodFillSerialAlt(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    tempAllocation,
+                    dimensions,
+                    colour,
+                    showColour = false
+                )
+            3 -> if (showFacade)
+                filler = FloodFillParallel(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    inputAllocation,
+                    dimensions,
+                    colour,
+                    showColour = true
+                )
+            else
+                filler = FloodFillParallel(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    tempAllocation,
+                    dimensions,
+                    colour,
+                    showColour = false
+                )
+        }
+
+        filler.x = x
+        filler.y = y
+
+        // Processing task may not be initialised yet
+        processingTask?.filler = filler
+    }
+
+    fun setFillerXandY(x: Int, y: Int) {
+        filler.x = x
+        filler.y = y
     }
 
     fun choosePreProcessor(preProcessorChoice: Int) {
@@ -195,27 +320,34 @@ class ProcessingCoordinator(
                 5
             )
         }
-        if (processingTask != null)
-            processingTask.preProcessor = preProcessor
+        // Processing task may not be initialised yet
+        processingTask?.preProcessor = preProcessor
     }
 
-    fun setGaussianMaskSize(size : Int) {
+    fun setGaussianMaskSize(size: Int) {
         if (preProcessor is GaussianProcessor) {
             (preProcessor as GaussianProcessor).maskSize = size
             (preProcessor as GaussianProcessor).recalculateGaussianKernel()
         }
     }
 
-    fun setGaussianSigma(sigma : Double) {
+    fun setGaussianSigma(sigma: Double) {
         if (preProcessor is GaussianProcessor) {
             (preProcessor as GaussianProcessor).sigma = sigma
             (preProcessor as GaussianProcessor).recalculateGaussianKernel()
         }
     }
 
-    fun closeAllocations() {
+    fun closeAllocationsAndStop() {
         inputAllocation.destroy()
         outputAllocation.destroy()
         tempAllocation.destroy()
+        processingHandler.removeCallbacks(processingTask)
+        processingTask.stop()
+    }
+
+    fun setColour(c: Colour) {
+        this.colour = c
+        filler.colour = colour
     }
 }

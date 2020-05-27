@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="processors">
+    <string-array name="settings_processors_titles">
         <item>None</item>
         <item>Sobel</item>
         <item>Scharr</item>
@@ -8,12 +8,40 @@
         <item>Prewitt Operator</item>
         <item>Canny</item>
     </string-array>
-    <string-array name="preprocessors">
+    <string-array name="settings_processors_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </string-array>
+    <string-array name="settings_preprocessors_titles">
         <item>None</item>
         <item>Gaussian</item>
     </string-array>
-    <string-array name="maskSizes" >
+    <string-array name="settings_preprocessors_values">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+    <string-array name="settings_maskSizes_titles" >
         <item>3x3</item>
         <item>5x5</item>
+    </string-array>
+    <string-array name="settings_maskSizes_values" >
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+    <string-array name="settings_fillers_titles">
+        <item>None</item>
+        <item>Serial Flood Fill - Frontier Swapping</item>
+        <item>Serial Flood Fill - Single Queue</item>
+        <item>Parallel Flood Fill</item>
+    </string-array>
+    <string-array name="settings_fillers_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </string-array>
 </resources>

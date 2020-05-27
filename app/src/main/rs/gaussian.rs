@@ -11,13 +11,8 @@ int gImageH;
 int gMaskSize;
 float *gConvMask1d;
 
-////
-// CUDA kernel to convolve rows of an image using the convolution kernel
-// stored in d_convMask1D.
-// in_pixels: device array holding the original image data.
-// out_pixels: device array where the modified image should be written.
-// image_w, image_h: width & height of the image.
-////
+// Kernel to convolve rows of an image using the convolution kernel
+// stored in gConvMask1d.
 uchar __attribute__((kernel)) convolve_kernel_row(uint32_t x, uint32_t y)
 {
         ulong pixelX;
@@ -31,18 +26,12 @@ uchar __attribute__((kernel)) convolve_kernel_row(uint32_t x, uint32_t y)
             }
         }
 
-        // Write out merged HDR result
         return new_val;
 }
 
 
-////
-// CUDA kernel to convolve columns of an image using the convolution kernel
-// stored in d_conv_kernel.
-// in_pixels: device array holding the original image data.
-// out_pixels: device array where the modified image should be written.
-// image_w, image_h: width & height of the image.
-////
+// Kernel to convolve columns of an image using the convolution kernel
+// stored in gConvMask1d.
 uchar __attribute__((kernel)) convolve_kernel_col(uint32_t x, uint32_t y)
 {
         ulong pixelY;
@@ -56,6 +45,5 @@ uchar __attribute__((kernel)) convolve_kernel_col(uint32_t x, uint32_t y)
             }
         }
 
-        // Write out merged HDR result
         return new_val;
 }

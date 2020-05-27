@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Pre-processor Settings">
+    <ListPreference
+        android:entries="@array/settings_preprocessors_titles"
+        android:entryValues="@array/settings_preprocessors_values"
+        android:key="preprocessor_list"
+        android:summary="Select which pre-processor to use"
+        android:title="Pre-Processor"/>
+
+    <EditTextPreference
+        android:inputType="number|numberDecimal"
+        android:text="10.0"
+        android:key="sigma"
+        android:summary="Set sigma for pre-processor"
+        android:title="Sigma" />
+    <ListPreference
+        android:entries="@array/settings_maskSizes_titles"
+        android:entryValues="@array/settings_maskSizes_values"
+        android:key="preprocessor_mask_list"
+        android:summary="Select pre-processor mask size"
+        android:title="Mask Size" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Processor Settings">
+    <ListPreference
+        android:entries="@array/settings_processors_titles"
+        android:entryValues="@array/settings_processors_values"
+        android:key="processor_list"
+        android:summary="Select edge detection implementation"
+        android:title="Processor"
+        />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Filler Settings">
+    <ListPreference
+        android:entries="@array/settings_fillers_titles"
+        android:entryValues="@array/settings_fillers_values"
+        android:key="filler_list"
+        android:summary="Select filler implementation generally serial is faster"
+        android:title="Filler" />
+     <SwitchPreference
+         android:key="facade_check"
+         android:summary="Show colour preview"
+         android:title="Facade"/>
+    </PreferenceCategory>
+</PreferenceScreen>

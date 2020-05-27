@@ -19,6 +19,7 @@ import uk.ac.plymouth.interiordesign.Fragments.CameraFragment
 import uk.ac.plymouth.interiordesign.Fragments.ColourPickerFragment
 import uk.ac.plymouth.interiordesign.Processors.GaussianCalculator
 
+// Just loads main camera fragment
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class MainActivity : AppCompatActivity() {
 
@@ -27,9 +28,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val cameraFragment = CameraFragment.newInstance()
         addFragment(cameraFragment)
-        val gaussianCalculator = GaussianCalculator(1.0, 5)
-        gaussianCalculator.createGaussianKernel()
-
     }
 
     private fun addFragment(fragment: Fragment) {

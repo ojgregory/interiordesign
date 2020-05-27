@@ -3,6 +3,8 @@ package uk.ac.plymouth.interiordesign.Processors
 import android.renderscript.Allocation
 import android.view.Surface
 
+// Interface for preprocessors currently only Gaussian
+// Strategy Pattern
 interface PreProcessor {
     var mInputAllocation: Allocation
     var mOutputAllocation: Allocation
