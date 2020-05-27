@@ -5,6 +5,8 @@ import android.renderscript.RenderScript
 import uk.ac.plymouth.interiordesign.Room.Colour
 import uk.ac.plymouth.interiordesign.ScriptC_dummy
 
+// This applies no processing just copies from original to output
+// Whilst converting from YUV to RGBA
 class DummyFiller(
     rs : RenderScript,
     override var mInputAllocation: Allocation,

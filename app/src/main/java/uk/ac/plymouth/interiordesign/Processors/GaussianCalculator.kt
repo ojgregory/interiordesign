@@ -4,6 +4,9 @@ import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+// Samples gaussian function to create kernel for blur
+// Only creates maskSizex1 size kernels as that is the only
+// type supported by Renderscript implementation
 class GaussianCalculator(sigma : Double, maskSize: Int) {
     var mSigma : Double = sigma
         get() = field
@@ -28,7 +31,7 @@ class GaussianCalculator(sigma : Double, maskSize: Int) {
         var acc = 0.0
 
         for  (i in 0 until mMaskSize) {
-            var x = i - (mMaskSize / 2)
+            val x = i - (mMaskSize / 2)
             kernel[i] = (constant * exp(-(x * x) / divisor)).toFloat()
             acc += kernel[i]
         }

@@ -9,6 +9,7 @@ import android.renderscript.Type
 import android.util.Size
 import android.view.Surface
 
+// Interface for processors, Strategy Pattern
 interface Processor {
     var mInputAllocation: Allocation
     var mOutputAllocation: Allocation

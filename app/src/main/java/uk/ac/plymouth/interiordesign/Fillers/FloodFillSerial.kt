@@ -10,6 +10,7 @@ import uk.ac.plymouth.interiordesign.Room.Colour
 import uk.ac.plymouth.interiordesign.ScriptC_dummy
 import uk.ac.plymouth.interiordesign.ScriptC_floodfill
 
+// Serial implementation of flood fill, uses frontier switching
 class FloodFillSerial(
     var rs: RenderScript,
     override var mInputAllocation: Allocation,
@@ -37,6 +38,7 @@ class FloodFillSerial(
         serialScript._imageW = dimensions.width
         dummyScript._gCurrentFrame = mOriginalAllocation
         dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
+        // Don't run if no x and y is selected
         if (x != 0 && y != 0) {
             serialScript._colour = Short4(
                 colour.r.toShort(), colour.g.toShort(),

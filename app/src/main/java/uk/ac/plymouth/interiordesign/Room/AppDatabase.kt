@@ -30,6 +30,7 @@ abstract class ColourDatabase : RoomDatabase() {
             }
         }
 
+        // Fill Database with values if none are present
         suspend fun fillColourDB(context: Context) {
             val colourDao = getDatabase(context).colourDao()
             colourDao.insert(

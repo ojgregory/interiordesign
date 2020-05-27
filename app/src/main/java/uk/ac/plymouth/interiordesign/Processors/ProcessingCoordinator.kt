@@ -10,6 +10,7 @@ import uk.ac.plymouth.interiordesign.Fillers.*
 import uk.ac.plymouth.interiordesign.Room.Colour
 import java.lang.NullPointerException
 
+// Organise the edge detection, blurring and filling algorithms
 class ProcessingCoordinator(
     preProcessorChoice: Int,
     processorChoice: Int,
@@ -30,6 +31,7 @@ class ProcessingCoordinator(
     val processingThread = HandlerThread("ProcessingCoordinator")
 
     init {
+        // Initialise shared allocations
         val yuvTypeBuilder = Type.Builder(
             rs, Element.createPixel(
                 rs,
@@ -63,6 +65,7 @@ class ProcessingCoordinator(
         )
 
 
+        // Initialise preProcessor, processor, and filler based on choices
         choosePreProcessor(preProcessorChoice)
         chooseProcessor(processorChoice)
         chooseFiller(fillerChoice)
@@ -70,6 +73,7 @@ class ProcessingCoordinator(
         processingThread.start()
         processingHandler = Handler(processingThread.looper)
 
+        // Launch processing task
         processingTask = ProcessingTask(
             processor,
             preProcessor,
@@ -106,6 +110,8 @@ class ProcessingCoordinator(
                         inputAllocation.ioReceive()
                     }
 
+                    // Run the algorithms in correct order
+                    // If any are dummy then they apply no processing
                     preProcessor.run()
                     processor.run()
                     filler.run()
@@ -151,17 +157,21 @@ class ProcessingCoordinator(
         return inputAllocation.surface
     }
 
-    fun chooseProcessor(processorChoice: Int) {
+    private fun chooseProcessor(processorChoice: Int) {
         when (processorChoice) {
             0 -> processor = DummyProcessor(rs, preProcessedAllocation, tempAllocation)
-            1 -> if (::processor.isInitialized && processor is SobelProcessor)
-                (processor as SobelProcessor).changeOperators(0)
-            else {
-                processor =
-                    SobelProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
-                (processor as SobelProcessor).changeOperators(0)
+            1 -> {
+                // Sobel and Scharr share class so change operator to sobel(0)
+                if (::processor.isInitialized && processor is SobelProcessor)
+                 (processor as SobelProcessor).changeOperators(0)
+                else {
+                    processor =
+                        SobelProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
+                    (processor as SobelProcessor).changeOperators(0)
+                }
             }
             2 -> {
+                // Sobel and Scharr share class so change operator to scharr(1)
                 if (::processor.isInitialized && processor is SobelProcessor)
                     (processor as SobelProcessor).changeOperators(1)
                 else {
@@ -195,6 +205,8 @@ class ProcessingCoordinator(
                     )
             }
         }
+
+        // Processing task may not be initialised yet
         processingTask?.processor = processor
     }
 
@@ -205,6 +217,7 @@ class ProcessingCoordinator(
             x = filler.x
             y = filler.y
         }
+        // Set default colour if none present
         if (!::colour.isInitialized)
             colour = Colour(255, 255, 255, 255, "White")
         when (fillerChoice) {
@@ -238,8 +251,8 @@ class ProcessingCoordinator(
         filler.x = x
         filler.y = y
 
-        if (processingTask != null)
-            processingTask.filler = filler
+        // Processing task may not be initialised yet
+        processingTask?.filler = filler
     }
 
     fun setFillerXandY(x: Int, y: Int) {
@@ -265,8 +278,8 @@ class ProcessingCoordinator(
                 5
             )
         }
-        if (processingTask != null)
-            processingTask.preProcessor = preProcessor
+        // Processing task may not be initialised yet
+        processingTask?.preProcessor = preProcessor
     }
 
     fun setGaussianMaskSize(size: Int) {

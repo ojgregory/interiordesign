@@ -11,6 +11,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 
+// Loads settings menu and saves changed settings in PreferenceManager
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +31,7 @@ class SettingsActivity : AppCompatActivity() {
             super.onCreate(savedInstanceState)
             addPreferencesFromResource(R.xml.preferences)
 
+            // Applies listener to all preferences to handle updated values
             bindPreferenceSummaryToValue(findPreference("preprocessor_list")!!)
             bindPreferenceSummaryToValue(findPreference("sigma")!!)
             bindPreferenceSummaryToValue(findPreference("preprocessor_mask_list")!!)
@@ -61,28 +63,6 @@ class SettingsActivity : AppCompatActivity() {
                         listPreference.entries[index]
                     else
                         null)
-
-            } else if (preference is RingtonePreference) {
-                // For ringtone preferences, look up the correct display value
-                // using RingtoneManager.
-                if (TextUtils.isEmpty(stringValue)) {
-                    // Empty values correspond to 'silent' (no ringtone).
-                    preference.setSummary("Silent")
-
-                } else {
-                    val ringtone = RingtoneManager.getRingtone(
-                        (preference as RingtonePreference).context, Uri.parse(stringValue))
-
-                    if (ringtone == null) {
-                        // Clear the summary if there was a lookup error.
-                        preference.setSummary(null)
-                    } else {
-                        // Set the summary to reflect the new ringtone display
-                        // name.
-                        val name = ringtone.getTitle((preference as RingtonePreference).context)
-                        preference.setSummary(name)
-                    }
-                }
             }
             else {
                 // For all other preferences, set the summary to the value's

@@ -4,6 +4,7 @@ import android.renderscript.Allocation
 import android.view.Surface
 import uk.ac.plymouth.interiordesign.Room.Colour
 
+// Filler interface to allow strategy pattern
 interface Filler {
     var mInputAllocation: Allocation
     var mOutputAllocation: Allocation

@@ -5,6 +5,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+// Both a class that can be used for other kotlin/java code
+// Also a database definition
 @Entity
 data class Colour(
     @ColumnInfo var r: Int,

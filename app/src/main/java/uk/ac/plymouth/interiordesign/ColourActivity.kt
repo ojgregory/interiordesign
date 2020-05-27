@@ -11,7 +11,8 @@ import uk.ac.plymouth.interiordesign.Fragments.ColoursFragment
 import uk.ac.plymouth.interiordesign.Fragments.DataReturnInterface
 import uk.ac.plymouth.interiordesign.Room.Colour
 
-
+// Colour Activity
+// Sets up the list fragment and returns selected colour to previous activity
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class ColourActivity : AppCompatActivity(), DataReturnInterface<Colour> {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,8 +30,9 @@ class ColourActivity : AppCompatActivity(), DataReturnInterface<Colour> {
         fragmentTransaction.commit()
     }
 
+    // Return colour as individual values
+    // Can be recreated at arrival
     override fun returnData(data: Colour) {
-        // Put the String to pass back into an Intent and close this activity
         val intent = Intent()
         intent.putExtra("r", data.r)
         intent.putExtra("g", data.g)

@@ -1,5 +1,7 @@
 package uk.ac.plymouth.interiordesign.Processors
 
+// Depending on choice return Scharr or Sobel operator
+// These were paired due to related history
 class SobelOperatorProvider {
     val maskSize = 3
     val scharrOperatorX = intArrayOf(3, 0, -3, 10, 0, -10, 3, 0, -3)

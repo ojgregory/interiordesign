@@ -5,6 +5,7 @@ import android.renderscript.RenderScript
 import android.renderscript.Script
 import uk.ac.plymouth.interiordesign.ScriptC_dummy
 
+// Transfers the input to the output, with no processing
 class DummyPreprocessor(
     rs : RenderScript,
     override var mInputAllocation: Allocation,

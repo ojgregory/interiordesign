@@ -55,8 +55,11 @@ class GaussianProcessor(
         mGaussianScript._gImageH = dimensions.height
         mGaussianScript._gMaskSize = gaussianCalculator.mMaskSize
         mGaussianScript.bind_gConvMask1d(mKernelAllocation)
+
+        // Convolve image in horizontal direction
         mGaussianScript.forEach_convolve_kernel_row(mTempAllocation)
         mGaussianScript._gCurrentFrame = mTempAllocation
+        // Use previous output to convolve in vertical direction providing final output
         mGaussianScript.forEach_convolve_kernel_col(mOutputAllocation)
     }
 }

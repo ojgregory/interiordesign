@@ -6,6 +6,7 @@ import uk.ac.plymouth.interiordesign.Room.Colour
 import uk.ac.plymouth.interiordesign.ScriptC_dummy
 import uk.ac.plymouth.interiordesign.ScriptC_floodfill
 
+// Parallel implementation of flood fill, uses frontier switching
 class FloodFillParallel(
     rs: RenderScript,
     override var mInputAllocation: Allocation,
@@ -35,6 +36,7 @@ class FloodFillParallel(
         parallelScript._imageW = dimensions.width
         dummyScript._gCurrentFrame = mOriginalAllocation
         dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
+        // Don't run if no x and y is selected
         if (x != 0 && y != 0) {
             parallelScript._input = mInputAllocation
             parallelScript._output = mOutputAllocation

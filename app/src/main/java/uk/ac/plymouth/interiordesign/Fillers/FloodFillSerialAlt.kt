@@ -10,6 +10,7 @@ import uk.ac.plymouth.interiordesign.Room.Colour
 import uk.ac.plymouth.interiordesign.ScriptC_dummy
 import uk.ac.plymouth.interiordesign.ScriptC_floodfill
 
+// Standard BFS Flood Fill, no frontier switching
 class FloodFillSerialAlt(
     var rs: RenderScript,
     override var mInputAllocation: Allocation,
