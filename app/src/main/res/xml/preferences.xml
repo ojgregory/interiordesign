@@ -40,5 +40,9 @@
         android:key="filler_list"
         android:summary="Select filler implementation generally serial is faster"
         android:title="Filler" />
+     <SwitchPreference
+         android:key="facade_check"
+         android:summary="Show colour preview"
+         android:title="Facade"/>
     </PreferenceCategory>
 </PreferenceScreen>

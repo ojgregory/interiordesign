@@ -12,7 +12,8 @@ class DummyFiller(
     override var mInputAllocation: Allocation,
     override var mOutputAllocation: Allocation,
     override var mOriginalAllocation: Allocation,
-    override var colour: Colour
+    override var colour: Colour,
+    var showColour : Boolean
 ) : Filler {
     private val dummyScript : ScriptC_dummy = ScriptC_dummy(rs)
     override var x: Int = 0
@@ -28,6 +29,9 @@ class DummyFiller(
 
     override fun run() {
         dummyScript._gCurrentFrame = mOriginalAllocation
-        dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
+        if (showColour)
+            dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
+        else
+            dummyScript.forEach_convertYToRGB(mOutputAllocation)
     }
 }

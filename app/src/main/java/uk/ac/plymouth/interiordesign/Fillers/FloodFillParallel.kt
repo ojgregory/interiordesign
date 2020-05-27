@@ -13,7 +13,8 @@ class FloodFillParallel(
     override var mOutputAllocation: Allocation,
     override var mOriginalAllocation: Allocation,
     private var dimensions: Size,
-    override var colour: Colour
+    override var colour: Colour,
+    var showColour : Boolean
 ) : Filler {
     private val parallelScript = ScriptC_floodfill(rs)
     private val dummyScript = ScriptC_dummy(rs)
@@ -35,7 +36,10 @@ class FloodFillParallel(
         parallelScript._imageH = dimensions.height
         parallelScript._imageW = dimensions.width
         dummyScript._gCurrentFrame = mOriginalAllocation
-        dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
+        if (showColour)
+            dummyScript.forEach_convertYToRGB_colour(mOutputAllocation)
+        else
+            dummyScript.forEach_convertYToRGB(mOutputAllocation)
         // Don't run if no x and y is selected
         if (x != 0 && y != 0) {
             parallelScript._input = mInputAllocation

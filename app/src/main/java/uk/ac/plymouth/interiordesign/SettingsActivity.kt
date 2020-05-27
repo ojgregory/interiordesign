@@ -1,15 +1,13 @@
 package uk.ac.plymouth.interiordesign
 
+import android.content.SharedPreferences
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Bundle
 import android.preference.RingtonePreference
 import android.text.TextUtils
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.ListPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceManager
+import androidx.preference.*
 
 // Loads settings menu and saves changed settings in PreferenceManager
 class SettingsActivity : AppCompatActivity() {
@@ -37,7 +35,7 @@ class SettingsActivity : AppCompatActivity() {
             bindPreferenceSummaryToValue(findPreference("preprocessor_mask_list")!!)
             bindPreferenceSummaryToValue(findPreference("processor_list")!!)
             bindPreferenceSummaryToValue(findPreference("filler_list")!!)
-
+            bindPreferenceSummaryToValue(findPreference("facade_check")!!)
         }
     }
 
@@ -78,10 +76,20 @@ class SettingsActivity : AppCompatActivity() {
 
             // Trigger the listener immediately with the preference's
             // current value.
-            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
-                PreferenceManager
-                    .getDefaultSharedPreferences(preference.context)
-                    .getString(preference.key, ""))
+            if ((preference is CheckBoxPreference) or (preference is SwitchPreference))
+                sBindPreferenceSummaryToValueListener.onPreferenceChange(
+                    preference,
+                    PreferenceManager
+                        .getDefaultSharedPreferences(preference.context)
+                        .getBoolean(preference.key, true)
+                )
+            else
+                sBindPreferenceSummaryToValueListener.onPreferenceChange(
+                    preference,
+                    PreferenceManager
+                        .getDefaultSharedPreferences(preference.context)
+                        .getString(preference.key, "")
+                )
         }
     }
 }

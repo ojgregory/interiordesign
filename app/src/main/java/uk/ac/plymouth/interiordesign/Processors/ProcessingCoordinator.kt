@@ -6,6 +6,7 @@ import android.os.HandlerThread
 import android.renderscript.*
 import android.util.Size
 import android.view.Surface
+import androidx.preference.PreferenceManager
 import uk.ac.plymouth.interiordesign.Fillers.*
 import uk.ac.plymouth.interiordesign.Room.Colour
 import java.lang.NullPointerException
@@ -29,6 +30,8 @@ class ProcessingCoordinator(
     private var processingTask: ProcessingTask
     private lateinit var colour: Colour
     val processingThread = HandlerThread("ProcessingCoordinator")
+    val prefs = PreferenceManager.getDefaultSharedPreferences(rs.applicationContext)
+    val showFacade = prefs.getBoolean("facade_check", true)
 
     init {
         // Initialise shared allocations
@@ -163,7 +166,7 @@ class ProcessingCoordinator(
             1 -> {
                 // Sobel and Scharr share class so change operator to sobel(0)
                 if (::processor.isInitialized && processor is SobelProcessor)
-                 (processor as SobelProcessor).changeOperators(0)
+                    (processor as SobelProcessor).changeOperators(0)
                 else {
                     processor =
                         SobelProcessor(rs, dimensions, preProcessedAllocation, tempAllocation)
@@ -221,31 +224,70 @@ class ProcessingCoordinator(
         if (!::colour.isInitialized)
             colour = Colour(255, 255, 255, 255, "White")
         when (fillerChoice) {
-            0 -> filler = DummyFiller(rs, tempAllocation, outputAllocation, inputAllocation, colour)
-            1 -> filler = FloodFillSerial(
-                rs,
-                tempAllocation,
-                outputAllocation,
-                inputAllocation,
-                dimensions,
-                colour
-            )
-            2 -> filler = FloodFillSerialAlt(
-                rs,
-                tempAllocation,
-                outputAllocation,
-                inputAllocation,
-                dimensions,
-                colour
-            )
-            3 -> filler = FloodFillParallel(
-                rs,
-                tempAllocation,
-                outputAllocation,
-                inputAllocation,
-                dimensions,
-                colour
-            )
+            0 -> if (showFacade)
+                filler = DummyFiller(rs, tempAllocation, outputAllocation, inputAllocation, colour, showColour = true)
+            else
+                filler = DummyFiller(rs, tempAllocation, outputAllocation, tempAllocation, colour, showColour = false)
+            1 -> if (showFacade)
+                filler = FloodFillSerial(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    inputAllocation,
+                    dimensions,
+                    colour,
+                    showColour = true
+                )
+            else
+                filler = FloodFillSerial(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    tempAllocation,
+                    dimensions,
+                    colour,
+                    showColour = false
+                )
+            2 -> if (showFacade)
+                filler = FloodFillSerialAlt(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    inputAllocation,
+                    dimensions,
+                    colour,
+                    showColour = true
+                )
+            else
+                filler = FloodFillSerialAlt(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    tempAllocation,
+                    dimensions,
+                    colour,
+                    showColour = false
+                )
+            3 -> if (showFacade)
+                filler = FloodFillParallel(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    inputAllocation,
+                    dimensions,
+                    colour,
+                    showColour = true
+                )
+            else
+                filler = FloodFillParallel(
+                    rs,
+                    tempAllocation,
+                    outputAllocation,
+                    tempAllocation,
+                    dimensions,
+                    colour,
+                    showColour = false
+                )
         }
 
         filler.x = x
