@@ -7,29 +7,13 @@ rs_allocation gCurrentFrame;
 int gImageW;
 int gImageH;
 
-// Host version of the convolution mask 2D array.
 int maskSize;
-//static float convXMask[maskSize][maskSize] = {
-//                                            { -1, 0, 1 },
-//										    { -2, 0, 2 },
-//										    { -1, 0, 1 }
-//										};
-//static float convYMask[maskSize][maskSize] = {
-//                                            { -1, -2, -1 },
-//										    { 0, 0, 0 },
-//									        { 1, 2, 1 }
-//									    };
 
 int *convXMask;
 int *convYMask;
 
-////
-// CUDA kernel to convolve an image using the convolution kernel
-// stored in d_convMask.
-// inPixels: device array holding the original image data.
-// outPixels: device array where the modified image should be written.
-// imageW, imageH: width & height of the image.
-////
+// kernel to convolve an image using the convolution kernels
+// stored in convXMask and convYMask.
 uchar __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
     uchar newPixel;
 
@@ -46,7 +30,6 @@ uchar __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
             pixelY = (y - (maskSize / 2)) + maskY;
             if (pixelX < gImageW && pixelY < gImageH) {
                 pixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, pixelX, pixelY);
-                //rsDebug("pixel", convXMask[maskX * maskSize + maskY]);
                 newValX = newValX + (float) (pixel * convXMask[maskX * maskSize + maskY]);
                 newValY = newValY + (float) (pixel * convYMask[maskX * maskSize + maskY]);
             }
@@ -61,25 +44,3 @@ uchar __attribute__((kernel)) convolveKernel(uint32_t x, uint32_t y) {
 
     return newPixel;
 }
-
-////
-// CUDA kernel to convolve an image using the convolution kernel
-// stored in d_convMask.
-// inPixels: device array holding the original image data.
-// outPixels: device array where the modified image should be written.
-// imageW, imageH: width & height of the image.
-////
-uchar4 __attribute__((kernel)) greyscale(uint32_t x, uint32_t y) {
-    uchar curPixel;
-    curPixel = rsGetElementAtYuv_uchar_Y(gCurrentFrame, x, y);
-
-    int4 rgb;
-    rgb.r = curPixel;
-    rgb.g = curPixel;
-    rgb.b = curPixel;
-    rgb.a = 255;
-
-    // Write out merged HDR result
-    return convert_uchar4(clamp(rgb, 0, 255));
-}
-

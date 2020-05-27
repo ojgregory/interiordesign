@@ -152,6 +152,8 @@ void parallel_implementation(int target_x, int target_y, int replacement_colour)
     create_queue(&nextQ);
     push(&currentQ, (uint2){target_x, target_y});
     isProcessed = rsCreateAllocation_uchar(imageW, imageH);
+    upperBound = target_colour + fuzzy;
+    lowerBound = target_colour - fuzzy;
 
     rs_script_call_t opts = {0};
     while(!isEmpty(&currentQ)) {
@@ -187,6 +189,8 @@ void checkQueue(Queue q, Queue otherQ) {
 void serial_implementation_while(int target_x, int target_y, int replacement_colour) {
     uchar target_colour = rsGetElementAtYuv_uchar_Y(input, target_x, target_y);
     uint2 n;
+    upperBound = target_colour + fuzzy;
+    lowerBound = target_colour - fuzzy;
     isProcessed = rsCreateAllocation_uchar(imageW, imageH);
     create_queue(&currentQ);
     push(&currentQ, (uint2){target_x, target_y});
@@ -212,7 +216,6 @@ void serial_implementation_while(int target_x, int target_y, int replacement_col
         }
 
         if (
-        //rsGetElementAt_uchar(isProcessed,n.x, n.y-1) != 1 &&
         rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) == target_colour
         )
         {
@@ -247,56 +250,34 @@ void serial_implementation(int target_x, int target_y, int replacement_colour) {
         rsSetElementAt_uchar(isProcessed, 1, n.x, n.y);
 
         if (
-        //rsGetElementAt_uchar(isProcessed,n.x-1, n.y) != 1 &&
         rsGetElementAtYuv_uchar_Y(input, n.x-1, n.y) == target_colour
         )
         {
-            //rsDebug("west", rsGetElementAt_uchar(isProcessed,target_x-1, target_y));
             push(&nextQ, (uint2){n.x-1, n.y});
-            //rsSetElementAt_uchar(isProcessed, 1, n.x-1, n.y);
         }
 
         if (
-        //rsGetElementAt_uchar(isProcessed,n.x+1, n.y) != 1 &&
         rsGetElementAtYuv_uchar_Y(input, n.x+1, n.y) == target_colour
         )
         {
-            //rsDebug("east", rsGetElementAt_uchar(isProcessed,target_x+1, target_y));
             push(&nextQ, (uint2){n.x+1, n.y});
-            //rsSetElementAt_uchar(isProcessed, 1, n.x+1, n.y);
         }
 
         if (
-        //rsGetElementAt_uchar(isProcessed,n.x, n.y-1) != 1 &&
         rsGetElementAtYuv_uchar_Y(input, n.x, n.y-1) == target_colour
         )
         {
-            //rsDebug("north", rsGetElementAt_uchar(isProcessed,target_x, target_y-1));
             push(&nextQ, (uint2){n.x, n.y-1});
-            //rsSetElementAt_uchar(isProcessed, 1, n.x, n.y-1);
         }
 
         if (
-        //rsGetElementAt_uchar(isProcessed,n.x, n.y+1) != 1 &&
         rsGetElementAtYuv_uchar_Y(input, n.x, n.y+1) == target_colour
         )
         {
-            //rsDebug("south", rsGetElementAt_uchar(isProcessed,target_x, target_y+1));
             push(&nextQ, (uint2){n.x, n.y+1});
-            //rsSetElementAt_uchar(isProcessed, 1, n.x, n.y+1);
         }
     };
-        //printQueue(nextQ);
         copyQueue(&currentQ, &nextQ);
-        //checkQueue(nextQ,currentQ);
         resetQueue(&nextQ);
-        //rsDebug("size", currentQ.size);
     };
-    //rsDebug("size", currentQ.size);
-    //rsDebug("north", rsGetElementAt_uchar(isProcessed,target_x, target_y-1));
-    //rsDebug("south", rsGetElementAt_uchar(isProcessed,target_x, target_y+1));
-    //rsDebug("west", rsGetElementAt_uchar(isProcessed,target_x-1, target_y));
-    //rsDebug("east", rsGetElementAt_uchar(isProcessed,target_x+1, target_y));
-    //rsDebug("rear", currentQ.rear);
-    //rsDebug("return", 1);
 }
