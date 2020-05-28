@@ -289,10 +289,7 @@ class CameraFragment : Fragment(), CameraWrapper.ErrorDisplayer, CameraWrapper.C
                     // for only the things we care about expands range of devices we can run on.
                     // We want:
                     //  - Back-facing camera
-                    //  - Manual sensor control
-                    //  - Per-frame synchronization (so that exposure can be changed every frame)
-                    if (facing == CameraCharacteristics.LENS_FACING_BACK &&
-                        (hasFullLevel || hasEnoughCapability)
+                    if (facing == CameraCharacteristics.LENS_FACING_BACK
                     ) { // Found suitable camera - get info, open, and set up outputs
                         cameraWrapper!!.openCamera(id)
                         previewSession()
